@@ -67,7 +67,7 @@ export default function RootLayout({
               <p>
                 &copy; 2024 SementeToken. Todos os direitos reservados.
                 <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                  v2.1.0 (Atualizado)
+                  v2.2.0 (Deploy VPS)
                 </span>
               </p>
               <p className="flex flex-wrap gap-3 md:justify-end">
