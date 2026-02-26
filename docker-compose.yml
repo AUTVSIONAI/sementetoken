@@ -1,0 +1,117 @@
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: sementetoken-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sementetoken}
+      POSTGRES_DB: ${DB_NAME:-sementetoken}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - semente-network
+
+  redis:
+    image: redis:alpine
+    container_name: sementetoken-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - semente-network
+
+  backend:
+    build: ./backend
+    container_name: sementetoken-backend
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-sementetoken}
+      DB_NAME: ${DB_NAME:-sementetoken}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-refreshsecret}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-adm@sementetoken.com}
+      WAVES_SERVICE_URL: http://waves-service:3002
+      AI_SERVICE_URL: http://ai-service:8000
+      SPECIES_PUBLIC_API_URL: ${SPECIES_PUBLIC_API_URL}
+      POLYGON_RPC: ${POLYGON_RPC}
+      SEME_ADDRESS: ${SEME_ADDRESS}
+      TREE_ADDRESS: ${TREE_ADDRESS}
+      NFT_ADDRESS: ${NFT_ADDRESS}
+    ports:
+      - "3000:3000"
+    networks:
+      - semente-network
+
+  frontend:
+    build: ./frontend
+    container_name: sementetoken-frontend
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_SEME_ADDRESS: ${SEME_ADDRESS}
+      NEXT_PUBLIC_TREE_ADDRESS: ${TREE_ADDRESS}
+      NEXT_PUBLIC_NFT_ADDRESS: ${NFT_ADDRESS}
+    networks:
+      - semente-network
+
+  ai-service:
+    build: ./ai-service
+    container_name: sementetoken-ai
+    restart: always
+    environment:
+      DB_HOST: postgres
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-sementetoken}
+      DB_NAME: ${DB_NAME:-sementetoken}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - semente-network
+
+  waves-service:
+    build: ./waves-service
+    container_name: sementetoken-waves
+    restart: always
+    environment:
+      WAVES_NODE_URL: https://nodes-testnet.wavesnodes.com
+      WAVES_SEED: ${WAVES_SEED:-example_seed_phrase}
+    ports:
+      - "3002:3000"
+    networks:
+      - semente-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: sementetoken-nginx
+    restart: always
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - semente-network
+
+networks:
+  semente-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

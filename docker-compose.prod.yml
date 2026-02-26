@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: sementetoken-db-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-sementetoken}
+      POSTGRES_DB: ${DB_NAME:-sementetoken}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - sementetoken_network
+
+  redis:
+    image: redis:alpine
+    container_name: sementetoken-redis-prod
+    restart: always
+    networks:
+      - sementetoken_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sementetoken-backend-prod
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "4001:3000"
+    networks:
+      - sementetoken_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SEME_ADDRESS: ${NEXT_PUBLIC_SEME_ADDRESS}
+        NEXT_PUBLIC_TREE_ADDRESS: ${NEXT_PUBLIC_TREE_ADDRESS}
+        NEXT_PUBLIC_NFT_ADDRESS: ${NEXT_PUBLIC_NFT_ADDRESS}
+    container_name: sementetoken-frontend-prod
+    restart: always
+    depends_on:
+      - backend
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - "4000:3000"
+    networks:
+      - sementetoken_network
+
+networks:
+  sementetoken_network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
