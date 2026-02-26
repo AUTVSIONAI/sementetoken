@@ -52,7 +52,7 @@ $DOCKER_COMPOSE_CMD -f docker-compose.prod.yml down -v
 
 # 5. Subir nova versão
 echo -e "${GREEN}Construindo e iniciando containers...${NC}"
-$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml up --build -d
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml up --build -d --remove-orphans
 
 # 6. Verificar status
 echo -e "${GREEN}Status dos containers:${NC}"
