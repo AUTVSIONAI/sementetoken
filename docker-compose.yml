@@ -32,6 +32,7 @@ services:
       - postgres
       - redis
     environment:
+      PORT: 3000
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-admin}
@@ -50,12 +51,18 @@ services:
       TREE_ADDRESS: ${TREE_ADDRESS}
       NFT_ADDRESS: ${NFT_ADDRESS}
     ports:
-      - "3000:3000"
+      - "4001:3000"
     networks:
       - semente-network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: /api
+        NEXT_PUBLIC_SEME_ADDRESS: ${SEME_ADDRESS}
+        NEXT_PUBLIC_TREE_ADDRESS: ${TREE_ADDRESS}
+        NEXT_PUBLIC_NFT_ADDRESS: ${NFT_ADDRESS}
     container_name: sementetoken-frontend
     restart: always
     depends_on:
@@ -65,6 +72,8 @@ services:
       NEXT_PUBLIC_SEME_ADDRESS: ${SEME_ADDRESS}
       NEXT_PUBLIC_TREE_ADDRESS: ${TREE_ADDRESS}
       NEXT_PUBLIC_NFT_ADDRESS: ${NFT_ADDRESS}
+    ports:
+      - "3000:3000"
     networks:
       - semente-network
 
