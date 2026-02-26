@@ -68,6 +68,47 @@ services:
     networks:
       - sementetoken_network
 
+  ai-service:
+    build: ./ai-service
+    container_name: sementetoken-ai-prod
+    restart: always
+    environment:
+      DB_HOST: postgres
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-sementetoken}
+      DB_NAME: ${DB_NAME:-sementetoken}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - sementetoken_network
+
+  waves-service:
+    build: ./waves-service
+    container_name: sementetoken-waves-prod
+    restart: always
+    environment:
+      WAVES_NODE_URL: https://nodes-testnet.wavesnodes.com
+      WAVES_SEED: ${WAVES_SEED:-example_seed_phrase}
+    ports:
+      - "3002:3000"
+    networks:
+      - sementetoken_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: sementetoken-nginx-prod
+    restart: always
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - sementetoken_network
+
 networks:
   sementetoken_network:
     driver: bridge
