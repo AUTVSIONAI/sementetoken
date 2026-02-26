@@ -29,7 +29,7 @@ import { SemeModule } from "./seme/seme.module"
       password: process.env.DB_PASSWORD || "sementetoken",
       database: process.env.DB_NAME || "sementetoken",
       entities: [__dirname + "/**/*.entity{.ts,.js}"],
-      synchronize: false
+      synchronize: true
     }),
     UsersModule,
     TreesModule,

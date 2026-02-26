@@ -1,12 +1,35 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import Image from "next/image"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SementeToken",
-  description: "Plataforma de Reflorestamento e Tokenização ESG"
+  title: "SementeToken - Reflorestamento e Tokenização ESG",
+  description: "Plataforma de Reflorestamento e Tokenização ESG. Transforme cada token em uma árvore real e acompanhe seu impacto ambiental.",
+  openGraph: {
+    title: "SementeToken - Reflorestamento e Tokenização ESG",
+    description: "Plataforma de Reflorestamento e Tokenização ESG. Transforme cada token em uma árvore real e acompanhe seu impacto ambiental.",
+    url: "https://sementetoken.com",
+    siteName: "SementeToken",
+    images: [
+      {
+        url: "/logo/logo.jpeg",
+        width: 800,
+        height: 800,
+        alt: "SementeToken Logo"
+      }
+    ],
+    locale: "pt_BR",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SementeToken",
+    description: "Plataforma de Reflorestamento e Tokenização ESG",
+    images: ["/logo/logo.jpeg"]
+  }
 }
 
 export default function RootLayout({
@@ -20,12 +43,17 @@ export default function RootLayout({
         <div className="min-h-screen flex flex-col">
           <header className="bg-gradient-to-r from-emerald-950 via-sky-950 to-emerald-900 border-b border-emerald-800/60">
             <nav className="max-w-6xl mx-auto px-4 lg:px-8 py-3 flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-emerald-400 to-lime-300 flex items-center justify-center text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-500/40">
-                  ST
+              <div className="flex items-center gap-3">
+                <div className="relative h-10 w-10 rounded-full overflow-hidden shadow-lg shadow-emerald-500/40 border-2 border-emerald-400/50">
+                  <Image
+                    src="/logo/logo.jpeg"
+                    alt="SementeToken Logo"
+                    fill
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-col leading-tight">
-                  <span className="text-sm font-semibold tracking-wide">
+                  <span className="text-sm font-semibold tracking-wide text-emerald-50">
                     SementeToken
                   </span>
                   <span className="text-[11px] text-emerald-200/80">
@@ -67,10 +95,10 @@ export default function RootLayout({
               <p>
                 &copy; 2024 SementeToken. Todos os direitos reservados.
                 <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                  v2.2.0 (Deploy VPS)
-                </span>
-              </p>
-              <p className="flex flex-wrap gap-3 md:justify-end">
+                  v2.3.0 (Logo & SEO Update)
+              </span>
+            </p>
+            <p className="flex flex-wrap gap-3 md:justify-end">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   Reflorestamento digital

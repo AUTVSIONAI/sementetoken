@@ -10,14 +10,10 @@ export default function Home() {
               ESG • Web3 • Inteligência Artificial
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
-              Transforme cada{" "}
-              <span className="text-emerald-300">token</span> em uma{" "}
-              <span className="text-sky-300">árvore real</span>.
+              Sua jornada para o <span className="text-emerald-300">impacto real</span> começa aqui.
             </h1>
             <p className="mt-6 text-base sm:text-lg text-emerald-50/90 max-w-xl">
-              SementeToken conecta pessoas, empresas e projetos de reflorestamento
-              usando blockchain, dados geoespaciais e IA para monitorar o impacto
-              em tempo real.
+              SementeToken une tecnologia blockchain, IA e transparência para transformar investimentos em florestas vivas. Monitore, neutralize e valorize sua pegada ambiental.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
@@ -179,30 +175,27 @@ export default function Home() {
               <div className="w-9 h-9 flex items-center justify-center rounded-full bg-emerald-400 text-emerald-950 font-bold mb-3">
                 1
               </div>
-              <h3 className="font-semibold mb-1">Escolha um projeto</h3>
+              <h3 className="font-semibold mb-1">Escolha seu Impacto</h3>
               <p>
-                No marketplace, selecione o bioma ou região que mais faz sentido
-                para você ou sua empresa.
+                Navegue pelo marketplace e selecione projetos de reflorestamento certificados em diversos biomas brasileiros.
               </p>
             </div>
             <div>
               <div className="w-9 h-9 flex items-center justify-center rounded-full bg-sky-400 text-sky-950 font-bold mb-3">
                 2
               </div>
-              <h3 className="font-semibold mb-1">Plante árvores digitais</h3>
+              <h3 className="font-semibold mb-1">Tokenize e Plante</h3>
               <p>
-                Cada árvore é registrada no banco de dados geoespacial e pode
-                ser tokenizada na blockchain.
+                Cada semente adquirida gera um token único que representa uma árvore real, garantindo rastreabilidade e propriedade digital.
               </p>
             </div>
             <div>
               <div className="w-9 h-9 flex items-center justify-center rounded-full bg-amber-300 text-amber-950 font-bold mb-3">
                 3
               </div>
-              <h3 className="font-semibold mb-1">Acompanhe e conte histórias</h3>
+              <h3 className="font-semibold mb-1">Monitore via IA</h3>
               <p>
-                Use o dashboard, o chat com a árvore e os relatórios ESG para
-                comunicar seu impacto de forma transparente.
+                Acompanhe o crescimento, a saúde e o sequestro de carbono da sua árvore em tempo real através do nosso painel inteligente.
               </p>
             </div>
           </div>

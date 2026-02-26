@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
+import Image from "next/image"
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
@@ -1593,13 +1594,18 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex">
       <aside className="hidden md:flex flex-col w-64 bg-slate-950 border-right border-emerald-900 px-6 py-8 space-y-6">
-        <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">
-            SementeToken
-          </p>
-          <p className="mt-1 font-semibold text-sm text-emerald-50">
-            Painel administrativo
-          </p>
+        <div className="flex flex-col gap-3">
+          <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20">
+             <Image src="/logo/logo.jpeg" alt="SementeToken Logo" fill className="object-cover" />
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">
+              SementeToken
+            </p>
+            <p className="mt-1 font-semibold text-sm text-emerald-50">
+              Painel administrativo
+            </p>
+          </div>
         </div>
         <nav className="flex-1 space-y-1 text-sm">
           <button
