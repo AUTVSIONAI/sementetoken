@@ -43,12 +43,13 @@ else
 fi
 
 # 3. Atualizar código do repositório
-echo -e "${GREEN}Atualizando repositório Git...${NC}"
-git pull origin main
+echo -e "${GREEN}Atualizando repositório Git (Forçando sincronização)...${NC}"
+git fetch origin
+git reset --hard origin/main
 
 # 4. Derrubar containers antigos (limpeza)
-echo -e "${GREEN}Reiniciando aplicação...${NC}"
-$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml down -v
+echo -e "${GREEN}Parando containers antigos e liberando portas...${NC}"
+$DOCKER_COMPOSE_CMD -f docker-compose.prod.yml down --remove-orphans || true
 
 # 5. Subir nova versão
 echo -e "${GREEN}Construindo e iniciando containers...${NC}"
