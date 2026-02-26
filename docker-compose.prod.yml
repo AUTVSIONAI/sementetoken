@@ -49,10 +49,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_SEME_ADDRESS: ${NEXT_PUBLIC_SEME_ADDRESS}
-        NEXT_PUBLIC_TREE_ADDRESS: ${NEXT_PUBLIC_TREE_ADDRESS}
-        NEXT_PUBLIC_NFT_ADDRESS: ${NEXT_PUBLIC_NFT_ADDRESS}
+        NEXT_PUBLIC_TREE_ADDRESS: ${TREE_ADDRESS}
+        NEXT_PUBLIC_NFT_ADDRESS: ${NFT_ADDRESS}
     container_name: sementetoken-frontend-prod
     restart: always
     depends_on:
@@ -62,7 +62,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_API_URL: /api
     ports:
       - "4000:3000"
     networks:
