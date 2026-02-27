@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common"
+import { ServeStaticModule } from "@nestjs/serve-static"
+import { join } from "path"
 import { TypeOrmModule } from "@nestjs/typeorm"
 import { ConfigModule } from "@nestjs/config"
 import { UsersModule } from "./users/users.module"
@@ -25,6 +27,10 @@ import { EsgModule } from "./esg/esg.module"
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), "uploads"),
+      serveRoot: "/uploads"
+    }),
     TypeOrmModule.forRoot({
       type: "postgres",
       host: process.env.DB_HOST || "localhost",

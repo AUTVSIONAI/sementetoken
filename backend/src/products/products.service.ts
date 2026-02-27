@@ -20,6 +20,7 @@ export class ProductsService {
     name: string
     description?: string
     price: number
+    imageUrl?: string
     carbonCashbackKg?: number
     projectId?: string | null
   }): Promise<Product> {
@@ -27,6 +28,7 @@ export class ProductsService {
       name: payload.name,
       description: payload.description || null,
       price: payload.price,
+      imageUrl: payload.imageUrl || null,
       carbonCashbackKg:
         typeof payload.carbonCashbackKg === "number"
           ? payload.carbonCashbackKg

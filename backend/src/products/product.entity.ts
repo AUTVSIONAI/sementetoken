@@ -22,6 +22,9 @@ export class Product {
   @Column({ type: 'float' })
   price: number;
 
+  @Column({ name: 'image_url', type: 'text', nullable: true })
+  imageUrl: string;
+
   @Column({ name: 'carbon_cashback_kg', type: 'float', default: 0 })
   carbonCashbackKg: number;
 

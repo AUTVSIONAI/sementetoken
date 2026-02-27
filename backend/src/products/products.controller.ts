@@ -5,8 +5,15 @@ import {
   Get,
   Param,
   Post,
-  UseGuards
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Req
 } from "@nestjs/common"
+import { FileInterceptor } from "@nestjs/platform-express"
+import { diskStorage } from "multer"
+import * as path from "path"
+import * as fs from "fs"
 import { ProductsService } from "./products.service"
 import { Product } from "./product.entity"
 import { JwtAuthGuard } from "../auth/jwt-auth.guard"
@@ -25,6 +32,31 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @Post("upload")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadDir = path.join(__dirname, "..", "..", "uploads", "products")
+          fs.mkdirSync(uploadDir, { recursive: true })
+          cb(null, uploadDir)
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+          const ext = path.extname(file.originalname)
+          cb(null, `${uniqueSuffix}${ext}`)
+        }
+      })
+    })
+  )
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
+    return {
+      url: `/uploads/products/${file.filename}`
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
   create(
     @Body()
@@ -32,6 +64,7 @@ export class ProductsController {
       name: string
       description?: string
       price: number
+      imageUrl?: string
       carbonCashbackKg?: number
       projectId?: string | null
     }

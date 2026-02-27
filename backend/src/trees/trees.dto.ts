@@ -6,5 +6,6 @@ export class CreateTreeDto {
   plantedAt?: string
   growthStage?: string
   estimatedCo2Total?: number
+  imageUrl?: string
 }
 

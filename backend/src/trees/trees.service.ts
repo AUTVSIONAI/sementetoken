@@ -26,6 +26,7 @@ export class TreesService {
         typeof payload.estimatedCo2Total === "number"
           ? payload.estimatedCo2Total
           : null,
+      imageUrl: payload.imageUrl || null,
       project: payload.projectId ? { id: payload.projectId } as any : null,
       location:
         typeof payload.latitude === "number" &&

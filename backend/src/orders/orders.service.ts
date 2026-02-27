@@ -80,19 +80,33 @@ export class OrdersService {
       await this.orderItemsRepository.save(orderItem)
     }
 
-    const tokensResult = await this.ordersRepository.query(
-      "INSERT INTO tokens (user_id, tree_id, amount) VALUES ($1, NULL, $2) RETURNING id",
-      [userId, totalCarbonCashbackKg]
-    )
+    try {
+      // Inserção direta de tokens para cashback
+      // Nota: tree_id é NULL pois é um token gerado por compra, não plantio direto
+      const tokensResult = await this.ordersRepository.query(
+        "INSERT INTO tokens (user_id, tree_id, amount) VALUES ($1, NULL, $2) RETURNING id",
+        [userId, totalCarbonCashbackKg]
+      )
 
-    const generatedTokens = tokensResult?.length || 0
+      const generatedTokens = tokensResult?.length || 0
 
-    return {
-      orderId: savedOrder.id,
-      totalAmount,
-      totalCarbonCashbackKg,
-      createdAt: savedOrder.createdAt.toISOString(),
-      generatedTokens
+      return {
+        orderId: savedOrder.id,
+        totalAmount,
+        totalCarbonCashbackKg,
+        createdAt: savedOrder.createdAt.toISOString(),
+        generatedTokens
+      }
+    } catch (error) {
+      console.error("Erro ao gerar tokens de cashback:", error)
+      // Não falhar o pedido se o token falhar, mas logar erro
+      return {
+        orderId: savedOrder.id,
+        totalAmount,
+        totalCarbonCashbackKg,
+        createdAt: savedOrder.createdAt.toISOString(),
+        generatedTokens: 0
+      }
     }
   }
 }

@@ -13,6 +13,9 @@ export class Tree {
   @Column()
   species: string;
 
+  @Column({ name: 'image_url', type: 'text', nullable: true })
+  imageUrl: string;
+
   @Index({ spatial: true })
   @Column({
     type: 'geography',

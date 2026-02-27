@@ -1244,10 +1244,10 @@ export default function Dashboard() {
       // em algumas redes ou versões de nós RPC.
       // Adicionamos gasLimit manual como fallback seguro (aumentado para 1.000.000 para evitar OOG).
       try {
-        const tx = await treeContract.plantTree(value, {
-          gasLimit: 1000000 // Limite de gás aumentado drasticamente
-        })
-        console.log("PlantTree Tx Hash:", tx.hash)
+              const tx = await treeContract.plantTree(value, {
+                gasLimit: 3000000 // Limite de gás aumentado para 3.000.000 (correção de Out of Gas)
+              })
+              console.log("PlantTree Tx Hash:", tx.hash)
         setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
         
         const receipt = await tx.wait()

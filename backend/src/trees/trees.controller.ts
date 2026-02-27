@@ -6,8 +6,14 @@ import {
   Param,
   Post,
   Req,
-  UseGuards
+  UseGuards,
+  UseInterceptors,
+  UploadedFile
 } from "@nestjs/common"
+import { FileInterceptor } from "@nestjs/platform-express"
+import { diskStorage } from "multer"
+import * as path from "path"
+import * as fs from "fs"
 import { TreesService } from "./trees.service"
 import { Tree } from "./tree.entity"
 import { JwtAuthGuard } from "../auth/jwt-auth.guard"
@@ -35,6 +41,31 @@ export class TreesController {
   plant(@Req() req: any, @Body() body: { projectId: string }) {
     const userId = req.user?.userId as string
     return this.treesService.plantForUser(userId, body.projectId)
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Post("upload")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          const uploadDir = path.join(__dirname, "..", "..", "uploads", "trees")
+          fs.mkdirSync(uploadDir, { recursive: true })
+          cb(null, uploadDir)
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+          const ext = path.extname(file.originalname)
+          cb(null, `${uniqueSuffix}${ext}`)
+        }
+      })
+    })
+  )
+  uploadImage(@UploadedFile() file: Express.Multer.File) {
+    return {
+      url: `/uploads/trees/${file.filename}`
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

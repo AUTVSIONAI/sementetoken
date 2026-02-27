@@ -206,6 +206,30 @@ export default function AdminPage() {
     growthStage: "",
     estimatedCo2Total: ""
   })
+  const [productImageFile, setProductImageFile] = useState<File | null>(null)
+  const [treeImageFile, setTreeImageFile] = useState<File | null>(null)
+
+  async function handleUploadFile(file: File, endpoint: string): Promise<string | null> {
+    const formData = new FormData()
+    formData.append("file", file)
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
+    if (!token) return null
+
+    try {
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      })
+      if (!res.ok) return null
+      const data = await res.json()
+      return data.url
+    } catch {
+      return null
+    }
+  }
   const [brigadeForm, setBrigadeForm] = useState({
     userId: "",
     name: "",
@@ -903,6 +927,14 @@ export default function AdminPage() {
       return
     }
     try {
+      let imageUrl = ""
+      if (treeImageFile) {
+        const uploaded = await handleUploadFile(treeImageFile, "/trees/upload")
+        if (uploaded) {
+          imageUrl = uploaded
+        }
+      }
+
       const body = {
         projectId: treeForm.projectId || null,
         species: treeForm.species,
@@ -912,7 +944,8 @@ export default function AdminPage() {
         growthStage: treeForm.growthStage || null,
         estimatedCo2Total: treeForm.estimatedCo2Total
           ? parseFloat(treeForm.estimatedCo2Total)
-          : null
+          : null,
+        imageUrl: imageUrl || null
       }
       const res = await fetch(`${API_URL}/trees`, {
         method: "POST",
@@ -1002,6 +1035,14 @@ export default function AdminPage() {
       return
     }
     try {
+      let imageUrl = ""
+      if (productImageFile) {
+        const uploaded = await handleUploadFile(productImageFile, "/products/upload")
+        if (uploaded) {
+          imageUrl = uploaded
+        }
+      }
+
       const body = {
         name: productForm.name,
         description: productForm.description || undefined,
@@ -1009,7 +1050,8 @@ export default function AdminPage() {
         carbonCashbackKg: productForm.carbonCashbackKg
           ? parseFloat(productForm.carbonCashbackKg)
           : 0,
-        projectId: productForm.projectId || null
+        projectId: productForm.projectId || null,
+        imageUrl: imageUrl || null
       }
       const res = await fetch(`${API_URL}/products`, {
         method: "POST",
@@ -2120,6 +2162,21 @@ export default function AdminPage() {
                       </option>
                     ))}
                   </select>
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] text-emerald-200/80 mb-1">
+                      Imagem da árvore (opcional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-sm text-emerald-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-500 file:text-emerald-950 hover:file:bg-emerald-400"
+                      onChange={(e) => {
+                         if (e.target.files && e.target.files[0]) {
+                           setTreeImageFile(e.target.files[0])
+                         }
+                      }}
+                    />
+                  </div>
                   <input
                     className="border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
                     placeholder="Latitude (ex: -23.55)"
@@ -3261,6 +3318,21 @@ export default function AdminPage() {
                   <h3 className="text-sm font-semibold text-emerald-100">
                     Novo produto
                   </h3>
+                  <div className="mb-2">
+                    <label className="block text-[11px] text-emerald-200/80 mb-1">
+                      Imagem do produto (opcional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="w-full text-sm text-emerald-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-500 file:text-emerald-950 hover:file:bg-emerald-400"
+                      onChange={(e) => {
+                         if (e.target.files && e.target.files[0]) {
+                           setProductImageFile(e.target.files[0])
+                         }
+                      }}
+                    />
+                  </div>
                   <input
                     className="w-full border border-emerald-800 rounded px-3 py-2 text-sm bg-slate-950 text-emerald-50"
                     placeholder="Nome do produto"
