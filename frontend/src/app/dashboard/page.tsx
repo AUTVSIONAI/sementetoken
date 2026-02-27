@@ -1198,10 +1198,10 @@ export default function Dashboard() {
       
       // Tentativa direta sem estimateGas, pois o erro de gas estimation pode ser misleading
       // em algumas redes ou versões de nós RPC.
-      // Adicionamos gasLimit manual como fallback seguro.
+      // Adicionamos gasLimit manual como fallback seguro (aumentado para 1.000.000 para evitar OOG).
       try {
         const tx = await treeContract.plantTree(value, {
-          gasLimit: 300000 // Limite de gás fixo e seguro para essa operação
+          gasLimit: 1000000 // Limite de gás aumentado drasticamente
         })
         console.log("PlantTree Tx Hash:", tx.hash)
         setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
@@ -1214,6 +1214,14 @@ export default function Dashboard() {
         )
       } catch (txError: any) {
          console.error("Transação falhou ao enviar:", txError)
+         
+         // Tenta extrair a mensagem de erro se disponível
+         let errorMessage = "Erro na transação. Verifique se tem tokens suficientes e se o contrato não está pausado."
+         if (txError?.reason) errorMessage = `Erro: ${txError.reason}`
+         else if (txError?.data?.message) errorMessage = `Erro: ${txError.data.message}`
+         else if (txError?.message) errorMessage = txError.message
+
+         setSemeActionMessage(errorMessage)
          throw txError
       }
 
