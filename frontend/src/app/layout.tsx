@@ -6,6 +6,7 @@ import Image from "next/image"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sementetoken.com"),
   title: "SementeToken - Reflorestamento e Tokenização ESG",
   description: "Plataforma de Reflorestamento e Tokenização ESG. Transforme cada token em uma árvore real e acompanhe seu impacto ambiental.",
   openGraph: {
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/logo/logo.jpeg",
-        width: 800,
-        height: 800,
+        width: 1200,
+        height: 630,
         alt: "SementeToken Logo"
       }
     ],

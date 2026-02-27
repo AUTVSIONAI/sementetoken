@@ -1196,27 +1196,26 @@ export default function Dashboard() {
 
       console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
       
-      // Tenta estimar o gás antes para ver se vai falhar
+      // Tentativa direta sem estimateGas, pois o erro de gas estimation pode ser misleading
+      // em algumas redes ou versões de nós RPC.
+      // Adicionamos gasLimit manual como fallback seguro.
       try {
-        await treeContract.plantTree.estimateGas(value)
-        console.log("Gas estimation success")
-      } catch (gasError: any) {
-        console.error("Gas Estimation Failed:", gasError)
-        // Se falhar no gas, provavelmente vai reverter. Mas tentamos enviar mesmo assim ou avisamos.
-        // O erro "execution reverted" geralmente aparece aqui.
-        throw new Error("A transação vai falhar (Gas Estimate falhou). Verifique se o contrato está pausado ou se há outras restrições.")
+        const tx = await treeContract.plantTree(value, {
+          gasLimit: 300000 // Limite de gás fixo e seguro para essa operação
+        })
+        console.log("PlantTree Tx Hash:", tx.hash)
+        setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
+        
+        const receipt = await tx.wait()
+        console.log("PlantTree Confirmed:", receipt)
+        
+        setSemeActionMessage(
+          `Plantio confirmado na blockchain. Tx: ${tx.hash.slice(0, 10)}...`
+        )
+      } catch (txError: any) {
+         console.error("Transação falhou ao enviar:", txError)
+         throw txError
       }
-
-      const tx = await treeContract.plantTree(value)
-      console.log("PlantTree Tx Hash:", tx.hash)
-      setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
-      
-      const receipt = await tx.wait()
-      console.log("PlantTree Confirmed:", receipt)
-      
-      setSemeActionMessage(
-        `Plantio confirmado na blockchain. Tx: ${tx.hash.slice(0, 10)}...`
-      )
 
       try {
         await connectMetamaskAndLoadSeme()
