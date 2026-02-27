@@ -93,13 +93,18 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
           <footer className="bg-slate-950 border-t border-emerald-900/80">
             <div className="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-[11px] text-emerald-100/80">
-              <p>
-                &copy; 2026 SementeToken. Todos os direitos reservados.
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                v2.4.0 (Meta Fixes)
-            </span>
-            </p>
-            <p className="flex flex-wrap gap-3 md:justify-end">
+              <div className="flex flex-col gap-1">
+                <p>
+                  &copy; 2026 SementeToken. Todos os direitos reservados.
+                  <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
+                    v2.4.0 (Meta Fixes)
+                  </span>
+                </p>
+                <p>
+                  Contato: <a href="mailto:sementetoken@gmail.com" className="text-emerald-400 hover:text-emerald-300 transition-colors">sementetoken@gmail.com</a>
+                </p>
+              </div>
+              <p className="flex flex-wrap gap-3 md:justify-end">
                 <span className="inline-flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   Reflorestamento digital
