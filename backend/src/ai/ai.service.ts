@@ -5,7 +5,7 @@ import { TreeChatRequestDto, TreeChatResponseDto } from "./ai.dto"
 @Injectable()
 export class AiService {
   async chatWithTree(payload: TreeChatRequestDto): Promise<TreeChatResponseDto> {
-    const baseUrl = process.env.AI_SERVICE_URL || "http://localhost:8000"
+    const baseUrl = process.env.AI_SERVICE_URL || "http://ai-service:8000"
 
     const body: any = {
       tree_id: payload.treeId,

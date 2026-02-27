@@ -1027,7 +1027,7 @@ export default function Dashboard() {
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      setSemeActionMessage("Informe uma quantidade válida de SEME/árvores.")
+      setSemeActionMessage("Informe uma quantidade válida de SEME para aprovar.")
       return
     }
 
@@ -1043,7 +1043,7 @@ export default function Dashboard() {
       return
     }
 
-    if (walletChainId !== POLYGON_CHAIN_ID_HEX) {
+    if (!walletChainId || walletChainId !== POLYGON_CHAIN_ID_HEX) {
       setSemeActionMessage(
         "Rede incorreta na MetaMask. Use Polygon Mainnet (chainId 137)."
       )
@@ -1054,23 +1054,54 @@ export default function Dashboard() {
     try {
       const provider = new BrowserProvider(ethereum)
       const signer = await provider.getSigner()
+      const signerAddress = await signer.getAddress()
 
       const tokenContract = new Contract(
         SEME_ADDRESS,
-        ["function approve(address spender, uint256 amount) returns (bool)"],
+        [
+          "function approve(address spender, uint256 amount) returns (bool)",
+          "function allowance(address owner, address spender) view returns (uint256)",
+          "function balanceOf(address owner) view returns (uint256)"
+        ],
         signer
       )
 
       const value = parseUnits(amount, 18)
       console.log("--- Approve Debug ---")
+      console.log("Token Address:", SEME_ADDRESS)
       console.log("Approve Spender (TREE_ADDRESS):", TREE_ADDRESS)
       console.log("Approve Amount (Wei):", value.toString())
+      console.log("Signer Address:", signerAddress)
+
+      // Check balance before approving
+      const balance = await tokenContract.balanceOf(signerAddress)
+      console.log("Current Balance (Wei):", balance.toString())
+      if (balance < value) {
+        throw new Error(
+          `Saldo insuficiente para aprovar. Você tem ${formatUnits(
+            balance,
+            18
+          )} SEME, mas tentou aprovar ${amount} SEME.`
+        )
+      }
 
       const tx = await tokenContract.approve(TREE_ADDRESS, value)
       setSemeActionMessage("Transação de approve enviada. Aguardando confirmação...")
+      console.log("Approve Tx Hash:", tx.hash)
+      
       await tx.wait()
-      setSemeActionMessage("Approve confirmado na blockchain.")
+      console.log("Approve Confirmed")
+
+      // Verify allowance after tx
+      const newAllowance = await tokenContract.allowance(
+        signerAddress,
+        TREE_ADDRESS
+      )
+      console.log("New Allowance (Wei):", newAllowance.toString())
+
+      setSemeActionMessage("Approve confirmado na blockchain. Agora você pode plantar.")
     } catch (error: any) {
+      console.error("Approve Error:", error)
       const message =
         typeof error?.message === "string"
           ? error.message
@@ -1110,7 +1141,7 @@ export default function Dashboard() {
       return
     }
 
-    if (walletChainId !== POLYGON_CHAIN_ID_HEX) {
+    if (!walletChainId || walletChainId !== POLYGON_CHAIN_ID_HEX) {
       setSemeActionMessage(
         "Rede incorreta na MetaMask. Use Polygon Mainnet (chainId 137)."
       )
@@ -1121,6 +1152,7 @@ export default function Dashboard() {
     try {
       const provider = new BrowserProvider(ethereum)
       const signer = await provider.getSigner()
+      const signerAddress = await signer.getAddress()
 
       const treeContract = new Contract(
         TREE_ADDRESS,
@@ -1130,27 +1162,58 @@ export default function Dashboard() {
 
       const tokenContract = new Contract(
         SEME_ADDRESS,
-        ["function allowance(address owner, address spender) view returns (uint256)"],
+        ["function allowance(address owner, address spender) view returns (uint256)", "function balanceOf(address) view returns (uint256)"],
         signer
       )
 
       const value = parseUnits(amount, 18)
 
-      console.log("--- PlantTree Debug ---")
-      console.log("Parsed Amount (Wei):", value.toString())
-      console.log("Contract Address (TREE_ADDRESS):", TREE_ADDRESS)
-      console.log("Wallet Address:", walletAddress)
+      console.log("--- DEBUG CHECKLIST (User Request) ---")
+      console.log("1. Amount Original:", amount)
+      console.log("2. Parsed Amount (Wei):", value.toString())
+      console.log("3. Tree Contract Address (Destino):", TREE_ADDRESS)
+      console.log("4. Token Contract Address (Origem):", SEME_ADDRESS)
+      console.log("5. Signer Address (Quem planta):", signerAddress)
 
-      const currentAllowance = await tokenContract.allowance(walletAddress, TREE_ADDRESS)
-      console.log("Current Allowance (Wei):", currentAllowance.toString())
+      // Check Balance
+      const balance = await tokenContract.balanceOf(signerAddress)
+      console.log("6. Current Balance (Wei):", balance.toString())
+      if (balance < value) {
+         const msg = `Saldo insuficiente. Você tem ${formatUnits(balance, 18)} SEME, mas precisa de ${amount} SEME.`
+         console.error(msg)
+         throw new Error(msg)
+      }
+
+      // Check Allowance
+      const currentAllowance = await tokenContract.allowance(signerAddress, TREE_ADDRESS)
+      console.log("7. Current Allowance (Wei):", currentAllowance.toString())
 
       if (currentAllowance < value) {
-        throw new Error(`Aprovação insuficiente. Atual: ${formatUnits(currentAllowance, 18)} SEME, Necessário: ${amount} SEME. Por favor, aprove primeiro.`)
+        const msg = `Aprovação insuficiente. Atual: ${formatUnits(currentAllowance, 18)} SEME, Necessário: ${amount} SEME. Por favor, clique em "Aprovar SEME" primeiro e aguarde a confirmação.`
+        console.error(msg)
+        throw new Error(msg)
+      }
+
+      console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
+      
+      // Tenta estimar o gás antes para ver se vai falhar
+      try {
+        await treeContract.plantTree.estimateGas(value)
+        console.log("Gas estimation success")
+      } catch (gasError: any) {
+        console.error("Gas Estimation Failed:", gasError)
+        // Se falhar no gas, provavelmente vai reverter. Mas tentamos enviar mesmo assim ou avisamos.
+        // O erro "execution reverted" geralmente aparece aqui.
+        throw new Error("A transação vai falhar (Gas Estimate falhou). Verifique se o contrato está pausado ou se há outras restrições.")
       }
 
       const tx = await treeContract.plantTree(value)
+      console.log("PlantTree Tx Hash:", tx.hash)
       setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
+      
       const receipt = await tx.wait()
+      console.log("PlantTree Confirmed:", receipt)
+      
       setSemeActionMessage(
         `Plantio confirmado na blockchain. Tx: ${tx.hash.slice(0, 10)}...`
       )
@@ -1160,6 +1223,7 @@ export default function Dashboard() {
       } catch {
       }
     } catch (error: any) {
+      console.error("PlantTree Error:", error)
       const message =
         typeof error?.message === "string"
           ? error.message

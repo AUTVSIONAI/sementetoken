@@ -93,10 +93,10 @@ export default function RootLayout({
           <footer className="bg-slate-950 border-t border-emerald-900/80">
             <div className="max-w-6xl mx-auto px-4 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-[11px] text-emerald-100/80">
               <p>
-                &copy; 2024 SementeToken. Todos os direitos reservados.
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                  v2.3.0 (Logo & SEO Update)
-              </span>
+                &copy; 2026 SementeToken. Todos os direitos reservados.
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
+                v2.4.0 (Meta Fixes)
+            </span>
             </p>
             <p className="flex flex-wrap gap-3 md:justify-end">
                 <span className="inline-flex items-center gap-1">
