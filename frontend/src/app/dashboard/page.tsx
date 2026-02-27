@@ -382,6 +382,34 @@ export default function Dashboard() {
   const [marketChatMessages, setMarketChatMessages] = useState<ChatMessage[]>([])
   const [marketChatInput, setMarketChatInput] = useState("")
   const [marketChatLoading, setMarketChatLoading] = useState(false)
+  const [buyAmount, setBuyAmount] = useState("")
+
+  async function handleBuyTokens(amount: string) {
+    if (!amount || Number(amount) <= 0) return
+    try {
+      const token = localStorage.getItem("accessToken")
+      const response = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ amount: Number(amount) })
+      })
+
+      if (!response.ok) {
+        console.error("Erro ao criar sessão de checkout")
+        return
+      }
+
+      const { url } = await response.json()
+      if (url) {
+        window.location.href = url
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
 
   const [chatMode, setChatMode] = useState<"guardian" | "forest">("guardian")
   const [forestMessages, setForestMessages] = useState<ChatMessage[]>([
@@ -2586,6 +2614,30 @@ export default function Dashboard() {
                   </p>
                   <p className="mt-1 text-[11px] text-emerald-200/70">
                     Tokens on-chain 1:1 com árvores reais na Polygon.
+                  </p>
+                </div>
+                <div className="bg-slate-950/60 border border-emerald-700 rounded-2xl p-4 space-y-3">
+                  <p className="text-[11px] text-emerald-200/80">
+                    Comprar Semente Tokens (BRL)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={10}
+                      className="w-28 border border-emerald-800 rounded px-2 py-1 bg-slate-950 text-emerald-50 text-[11px]"
+                      value={buyAmount}
+                      onChange={(e) => setBuyAmount(e.target.value)}
+                      placeholder="Valor em R$"
+                    />
+                    <button
+                      onClick={() => handleBuyTokens(buyAmount)}
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-500"
+                    >
+                      Comprar
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-emerald-200/70">
+                    Pagamento via cartão de crédito (Stripe). O valor será convertido em saldo interno.
                   </p>
                 </div>
                 <div className="bg-slate-950/60 border border-emerald-700 rounded-2xl p-4 space-y-3">

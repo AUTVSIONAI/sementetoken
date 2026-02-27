@@ -17,6 +17,10 @@ import { GreenTokenModule } from "./green-token/green-token.module"
 import { SeedTokenModule } from "./seed-token/seed-token.module"
 import { ConversionsModule } from "./conversions/conversions.module"
 import { SemeModule } from "./seme/seme.module"
+import { StripeModule } from "./stripe/stripe.module"
+import { BlockchainModule } from "./blockchain/blockchain.module"
+import { NftModule } from "./nft/nft.module"
+import { EsgModule } from "./esg/esg.module"
 
 @Module({
   imports: [
@@ -46,7 +50,11 @@ import { SemeModule } from "./seme/seme.module"
     GreenTokenModule,
     SeedTokenModule,
     ConversionsModule,
-    SemeModule
+    SemeModule,
+    StripeModule,
+    BlockchainModule,
+    NftModule,
+    EsgModule
   ]
 })
 export class AppModule {}
