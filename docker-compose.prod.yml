@@ -72,12 +72,13 @@ services:
     build: ./ai-service
     container_name: sementetoken-ai-prod
     restart: always
+    env_file:
+      - .env.production
     environment:
       DB_HOST: postgres
       DB_USER: ${DB_USER:-admin}
       DB_PASSWORD: ${DB_PASSWORD:-sementetoken}
       DB_NAME: ${DB_NAME:-sementetoken}
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
     ports:
       - "8000:8000"
     networks:
