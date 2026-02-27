@@ -1062,6 +1062,10 @@ export default function Dashboard() {
       )
 
       const value = parseUnits(amount, 18)
+      console.log("--- Approve Debug ---")
+      console.log("Approve Spender (TREE_ADDRESS):", TREE_ADDRESS)
+      console.log("Approve Amount (Wei):", value.toString())
+
       const tx = await tokenContract.approve(TREE_ADDRESS, value)
       setSemeActionMessage("Transação de approve enviada. Aguardando confirmação...")
       await tx.wait()
@@ -1124,7 +1128,26 @@ export default function Dashboard() {
         signer
       )
 
+      const tokenContract = new Contract(
+        SEME_ADDRESS,
+        ["function allowance(address owner, address spender) view returns (uint256)"],
+        signer
+      )
+
       const value = parseUnits(amount, 18)
+
+      console.log("--- PlantTree Debug ---")
+      console.log("Parsed Amount (Wei):", value.toString())
+      console.log("Contract Address (TREE_ADDRESS):", TREE_ADDRESS)
+      console.log("Wallet Address:", walletAddress)
+
+      const currentAllowance = await tokenContract.allowance(walletAddress, TREE_ADDRESS)
+      console.log("Current Allowance (Wei):", currentAllowance.toString())
+
+      if (currentAllowance < value) {
+        throw new Error(`Aprovação insuficiente. Atual: ${formatUnits(currentAllowance, 18)} SEME, Necessário: ${amount} SEME. Por favor, aprove primeiro.`)
+      }
+
       const tx = await treeContract.plantTree(value)
       setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
       const receipt = await tx.wait()
