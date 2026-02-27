@@ -1184,7 +1184,11 @@ export default function Dashboard() {
 
       const treeContract = new Contract(
         TREE_ADDRESS,
-        ["function plantTree(uint256 amount)"],
+        [
+          "function plantTree(uint256 amount)",
+          "function paused() view returns (bool)",
+          "function plantingPrice() view returns (uint256)"
+        ],
         signer
       )
 
@@ -1210,6 +1214,18 @@ export default function Dashboard() {
          const msg = `Saldo insuficiente. Você tem ${formatUnits(balance, 18)} SEME, mas precisa de ${amount} SEME.`
          console.error(msg)
          throw new Error(msg)
+      }
+
+      // Check Contract Paused
+      try {
+        const isPaused = await treeContract.paused()
+        console.log("6.1. Is Contract Paused:", isPaused)
+        if (isPaused) {
+           throw new Error("O contrato de plantio está pausado temporariamente.")
+        }
+      } catch (err: any) {
+        // Se a função não existir ou der erro, loga mas segue (pode ser contrato antigo sem essa função)
+        console.warn("Could not check paused status:", err.message)
       }
 
       // Check Allowance
