@@ -33,7 +33,7 @@ export class BlockchainController {
     }
 
     // Deduzir saldo interno (queima interna para mint externo)
-    await this.walletService.updateSeedBalance(userId, -amountToMint);
+    await this.walletService.adjustSeedBalance(userId, -amountToMint);
 
     // Mintar on-chain
     const targetAddress = body.walletAddress;
