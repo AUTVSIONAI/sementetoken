@@ -122,7 +122,7 @@ export default function RootLayout({
                 <p>
                   &copy; 2026 SementeToken. Todos os direitos reservados.
                   <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                    v3.1.8 (Clean Logs)
+                    v3.1.9-FINAL (STORE FIX)
                   </span>
                 </p>
                 <p className="text-emerald-500/60">
