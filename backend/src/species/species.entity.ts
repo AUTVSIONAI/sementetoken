@@ -16,6 +16,9 @@ export class Species {
   @Column({ name: "scientific_name", nullable: true })
   scientificName: string
 
+  @Column({ name: "slug", unique: true, nullable: true })
+  slug: string
+
   @Column({ name: "biome", nullable: true })
   biome: string
 
@@ -33,6 +36,12 @@ export class Species {
 
   @Column({ name: "image_url", nullable: true })
   imageUrl: string
+
+  @Column({ name: "is_official", default: false })
+  isOfficial: boolean
+
+  @Column({ default: "ACTIVE" })
+  status: string
 
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date

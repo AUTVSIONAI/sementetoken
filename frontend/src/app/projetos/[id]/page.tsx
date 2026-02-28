@@ -4,26 +4,14 @@ import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false }
-)
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false }
-)
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
-  { ssr: false }
-)
-const CircleMarker = dynamic(
-  () => import("react-leaflet").then((m) => m.CircleMarker),
-  { ssr: false }
-)
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
-  { ssr: false }
-)
+const MapboxMap = dynamic(() => import("../../../components/MapboxMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-72 bg-slate-900 animate-pulse rounded-lg flex items-center justify-center text-emerald-500/50">
+      Carregando mapa 3D...
+    </div>
+  )
+})
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
@@ -277,6 +265,57 @@ export default function ProjetoPage() {
     return null
   }, [projectCoordinates, projectCenter])
 
+  const mapMarkers = useMemo(() => {
+    const markers: any[] = []
+
+    if (projectMarkerPosition) {
+      markers.push({
+        id: "project-center",
+        latitude: projectMarkerPosition[0],
+        longitude: projectMarkerPosition[1],
+        title: "Centro do Projeto",
+        description: `${locationLabel} ${coordinatesLabel || ""}`,
+        type: "default"
+      })
+    }
+
+    feedItems.forEach((item) => {
+      if (
+        typeof item.latitude === "number" &&
+        typeof item.longitude === "number" &&
+        !Number.isNaN(item.latitude) &&
+        !Number.isNaN(item.longitude)
+      ) {
+        const typeLabel =
+          item.type === "planting"
+            ? "Plantio"
+            : item.type === "inspection"
+            ? "Inspeção"
+            : item.type === "fire_alert"
+            ? "Alerta de Fogo"
+            : "Ação"
+
+        const desc = [
+          item.brigadeName ? `Brigada: ${item.brigadeName}` : "",
+          item.treeSpecies ? `Espécie: ${item.treeSpecies}` : "",
+          item.description || "",
+          item.createdAt ? new Date(item.createdAt).toLocaleDateString("pt-BR") : ""
+        ].filter(Boolean).join(". ")
+
+        markers.push({
+          id: item.id,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          title: typeLabel,
+          description: desc,
+          type: "feed"
+        })
+      }
+    })
+
+    return markers
+  }, [projectMarkerPosition, feedItems, locationLabel, coordinatesLabel])
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-10 lg:py-14 space-y-8">
@@ -380,84 +419,16 @@ export default function ProjetoPage() {
             </div>
             <div className="rounded-2xl overflow-hidden border border-emerald-900 bg-slate-950/80 min-h-[260px]">
               {hasMapData ? (
-                <MapContainer
-                  center={mapCenter}
-                  zoom={6}
-                  scrollWheelZoom={false}
-                  className="w-full h-72"
-                >
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                <div className="w-full h-72">
+                  <MapboxMap
+                    initialViewState={{
+                      longitude: mapCenter[1],
+                      latitude: mapCenter[0],
+                      zoom: 6
+                    }}
+                    markers={mapMarkers}
                   />
-                  {projectMarkerPosition && (
-                    <CircleMarker
-                      center={projectMarkerPosition}
-                      radius={10}
-                      color="#22c55e"
-                      fillColor="#22c55e"
-                      fillOpacity={0.9}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <div className="font-bold">
-                            Centro aproximado do projeto
-                          </div>
-                          {locationLabel && <div>{locationLabel}</div>}
-                          {coordinatesLabel && (
-                            <div className="font-mono text-emerald-100 mt-1">
-                              {coordinatesLabel}
-                            </div>
-                          )}
-                        </div>
-                      </Popup>
-                    </CircleMarker>
-                  )}
-                  {feedItems.map((item) => {
-                    if (
-                      typeof item.latitude !== "number" ||
-                      typeof item.longitude !== "number" ||
-                      Number.isNaN(item.latitude) ||
-                      Number.isNaN(item.longitude)
-                    ) {
-                      return null
-                    }
-                    return (
-                      <Marker
-                        key={item.id}
-                        position={[item.latitude, item.longitude]}
-                      >
-                        <Popup>
-                          <div className="text-sm">
-                            <div className="font-bold">
-                              {item.type === "planting"
-                                ? "Plantio registrado"
-                                : item.type === "inspection"
-                                ? "Inspeção registrada"
-                                : item.type === "fire_alert"
-                                ? "Alerta de fogo"
-                                : "Ação registrada"}
-                            </div>
-                            {item.brigadeName && (
-                              <div>Brigada: {item.brigadeName}</div>
-                            )}
-                            {item.treeSpecies && (
-                              <div>Espécie: {item.treeSpecies}</div>
-                            )}
-                            {item.description && <div>{item.description}</div>}
-                            {item.createdAt && (
-                              <div>
-                                {new Date(
-                                  item.createdAt
-                                ).toLocaleString("pt-BR")}
-                              </div>
-                            )}
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )
-                  })}
-                </MapContainer>
+                </div>
               ) : (
                 <div className="w-full h-72 flex items-center justify-center text-xs text-emerald-200/70">
                   Nenhuma ação com coordenadas registrada ainda para este

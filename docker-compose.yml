@@ -50,6 +50,8 @@ services:
       SEME_ADDRESS: ${SEME_ADDRESS}
       TREE_ADDRESS: ${TREE_ADDRESS}
       NFT_ADDRESS: ${NFT_ADDRESS}
+    volumes:
+      - ./backend/uploads:/app/uploads
     ports:
       - "4001:3000"
     networks:

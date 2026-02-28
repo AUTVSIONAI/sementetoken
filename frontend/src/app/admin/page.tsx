@@ -1,30 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false }
-)
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false }
-)
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
-  { ssr: false }
-)
-const CircleMarker = dynamic(
-  () => import("react-leaflet").then((m) => m.CircleMarker),
-  { ssr: false }
-)
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
-  { ssr: false }
-)
+const MapboxMap = dynamic(() => import("../../components/MapboxMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-48 bg-slate-900 animate-pulse rounded-lg flex items-center justify-center text-emerald-500/50">
+      Carregando mapa...
+    </div>
+  )
+})
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
@@ -308,6 +296,7 @@ export default function AdminPage() {
     null
   )
   const [enrichingSpeciesImages, setEnrichingSpeciesImages] = useState(false)
+  const [seedingOfficial, setSeedingOfficial] = useState(false)
   const [feedActions, setFeedActions] = useState<AdminFeedAction[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
   const [brigades, setBrigades] = useState<
@@ -453,6 +442,39 @@ export default function AdminPage() {
     }
   }
 
+
+  async function handleSeedOfficialSpecies() {
+    setSeedingOfficial(true)
+    setError("")
+    setSuccess("")
+    try {
+      const token = localStorage.getItem("accessToken")
+      if (!token) return
+
+      const res = await fetch(`${API_URL}/species/seed-official`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || "Erro ao semear catálogo oficial")
+      }
+
+      const result = await res.json()
+      setSuccess(
+        `Catálogo oficial processado! Criados: ${result.created}, Pulados: ${result.skipped}, Erros: ${result.errors}`
+      )
+      // Opcional: recarregar a lista se necessário
+      fetchExternalSpecies()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSeedingOfficial(false)
+    }
+  }
 
   async function handleCreateBrigade() {
     const token =
@@ -3270,6 +3292,16 @@ export default function AdminPage() {
                           ? "Enriquecendo imagens..."
                           : "Enriquecer imagens (backend)"}
                       </button>
+                      <button
+                        type="button"
+                        onClick={handleSeedOfficialSpecies}
+                        disabled={seedingOfficial}
+                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-yellow-500/60 text-xs text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-50"
+                      >
+                        {seedingOfficial
+                          ? "Semeando..."
+                          : "Carregar Catálogo Oficial"}
+                      </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -4092,26 +4124,15 @@ export default function AdminPage() {
                         </p>
                       ) : (
                         <div className="w-full h-48 rounded-xl overflow-hidden border border-emerald-900">
-                          <MapContainer
-                            center={[
-                              brigadeActionsMap[0].latitude,
-                              brigadeActionsMap[0].longitude
-                            ]}
-                            zoom={6}
-                            scrollWheelZoom={false}
+                          <MapboxMap
+                            initialViewState={{
+                              longitude: brigadeActionsMap[0]?.longitude || -51.9253,
+                              latitude: brigadeActionsMap[0]?.latitude || -14.235,
+                              zoom: 6
+                            }}
+                            markers={brigadeMapMarkers}
                             className="w-full h-full"
-                          >
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            {brigadeActionsMap.map((a) => (
-                              <Marker
-                                key={a.id}
-                                position={[a.latitude, a.longitude]}
-                              />
-                            ))}
-                          </MapContainer>
+                          />
                         </div>
                       )}
                     </div>

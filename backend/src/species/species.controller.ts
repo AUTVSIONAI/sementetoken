@@ -72,4 +72,11 @@ export class SpeciesController {
   remove(@Param("id") id: string) {
     return this.speciesService.remove(id)
   }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Post("seed-official")
+  seedOfficial() {
+    return this.speciesService.seedOfficialSpecies()
+  }
 }

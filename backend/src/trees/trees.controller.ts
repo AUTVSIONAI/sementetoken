@@ -50,7 +50,7 @@ export class TreesController {
     FileInterceptor("file", {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          const uploadDir = path.join(__dirname, "..", "..", "uploads", "trees")
+          const uploadDir = path.join(process.cwd(), "uploads", "trees")
           fs.mkdirSync(uploadDir, { recursive: true })
           cb(null, uploadDir)
         },

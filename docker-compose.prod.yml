@@ -40,6 +40,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AI_SERVICE_URL: http://ai-service:8000
+    volumes:
+      - ./backend/uploads:/app/uploads
     ports:
       - "4001:3000"
     networks:

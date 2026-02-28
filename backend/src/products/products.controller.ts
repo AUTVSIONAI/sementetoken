@@ -37,7 +37,7 @@ export class ProductsController {
     FileInterceptor("file", {
       storage: diskStorage({
         destination: (req, file, cb) => {
-          const uploadDir = path.join(__dirname, "..", "..", "uploads", "products")
+          const uploadDir = path.join(process.cwd(), "uploads", "products")
           fs.mkdirSync(uploadDir, { recursive: true })
           cb(null, uploadDir)
         },
