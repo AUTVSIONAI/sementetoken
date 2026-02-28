@@ -1322,18 +1322,25 @@ export default function Dashboard() {
       console.log("Usando Gas Limit:", finalGasLimit.toString())
 
       try {
-              const tx = await treeContract.plantTree(value, {
-                gasLimit: finalGasLimit
-              })
-              console.log("PlantTree Tx Hash:", tx.hash)
-        setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
-        
-        const receipt = await tx.wait()
-        console.log("PlantTree Confirmed:", receipt)
-        
-        setSemeActionMessage(
-          `Plantio confirmado na blockchain. Tx: ${tx.hash.slice(0, 10)}...`
-        )
+         // Force explicit data encoding to ensure payload is not empty
+         const txData = treeContract.interface.encodeFunctionData("plantTree", [value])
+         console.log("Encoded Tx Data:", txData)
+
+         const tx = await signer.sendTransaction({
+             to: TREE_ADDRESS,
+             data: txData,
+             gasLimit: finalGasLimit
+         })
+         
+         console.log("PlantTree Tx Hash:", tx.hash)
+         setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
+         
+         const receipt = await tx.wait()
+         console.log("PlantTree Confirmed:", receipt)
+         
+         setSemeActionMessage(
+           `Plantio confirmado na blockchain. Tx: ${tx.hash.slice(0, 10)}...`
+         )
       } catch (txError: any) {
          console.error("Transação falhou ao enviar:", txError)
          
