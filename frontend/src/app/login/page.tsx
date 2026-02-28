@@ -76,6 +76,9 @@ export default function LoginPage() {
             <div className="relative h-full w-full rounded-3xl bg-slate-950 px-6 py-8 overflow-hidden">
               <div className="absolute -top-20 -right-10 w-40 h-40 bg-emerald-400/30 rounded-full blur-3xl" />
               <div className="absolute -bottom-24 -left-16 w-52 h-52 bg-sky-500/25 rounded-full blur-3xl" />
+              <div className="absolute top-2 left-2 text-[10px] text-emerald-500/50">
+                v3.1.9-FINAL (STORE FIX)
+              </div>
               <div className="relative space-y-4">
                 <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-emerald-500/50 shadow-lg shadow-emerald-500/20 mb-4">
                   <Image src="/logo/logo.jpeg" alt="SementeToken Logo" fill className="object-cover" />
