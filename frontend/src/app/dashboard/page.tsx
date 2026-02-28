@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.3-CHECK-TX-DATA")
+    console.log("APP VERSION: v3.1.4-FIX-TX-POPULATE")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1323,19 +1323,25 @@ export default function Dashboard() {
       console.log("Usando Gas Limit:", finalGasLimit.toString())
 
       try {
-         // Force explicit data encoding to ensure payload is not empty
-         const txData = treeContract.interface.encodeFunctionData("plantTree", [value])
-         console.log("Encoded Tx Data:", txData)
+         // Use populateTransaction to get the correct transaction request object
+         // This ensures that all fields (to, data, gasLimit) are correctly formatted for the signer
+         const populatedTx = await treeContract.plantTree.populateTransaction(value)
+         console.log("Populated Tx Request:", populatedTx)
 
-         if (!txData || txData === "0x") {
-            throw new Error("CRITICAL ERROR: Transaction data is empty. Please clear browser cache and try again.")
+         // Double check if data is present
+         if (!populatedTx.data || populatedTx.data === "0x") {
+            console.warn("Populate returned empty data, trying manual encoding...")
+            populatedTx.data = treeContract.interface.encodeFunctionData("plantTree", [value])
+         }
+         
+         if (!populatedTx.data || populatedTx.data === "0x") {
+             throw new Error("CRITICAL ERROR: Transaction data is empty even after manual encoding.")
          }
 
-         const tx = await signer.sendTransaction({
-             to: TREE_ADDRESS,
-             data: txData,
-             gasLimit: finalGasLimit
-         })
+         // Override gas limit with our calculated safe value
+         populatedTx.gasLimit = finalGasLimit
+
+         const tx = await signer.sendTransaction(populatedTx)
          
          console.log("PlantTree Tx Hash:", tx.hash)
          setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
