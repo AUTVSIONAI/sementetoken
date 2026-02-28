@@ -1298,7 +1298,8 @@ export default function Dashboard() {
       let finalGasLimit = BigInt(6000000) // Fallback seguro alto
       
       try {
-         const estimated = await treeContract.estimateGas.plantTree(value)
+         // Ethers v6 syntax: contract.method.estimateGas(args)
+         const estimated = await treeContract.plantTree.estimateGas(value)
          console.log("Gas estimado:", estimated.toString())
          // Adicionar margem de segurança de 20%
          finalGasLimit = (estimated * 120n) / 100n
