@@ -384,6 +384,46 @@ export default function Dashboard() {
   const [marketChatLoading, setMarketChatLoading] = useState(false)
   const [buyAmount, setBuyAmount] = useState("")
 
+  async function handleDownloadReport() {
+    try {
+      const token = localStorage.getItem("accessToken")
+      if (!token) return
+
+      const resProfile = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!resProfile.ok) {
+         alert('Erro ao identificar usuário')
+         return
+      }
+      const profile = await resProfile.json()
+      
+      const res = await fetch(`${API_URL}/esg/report/${profile.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      
+      if (!res.ok) {
+          alert('Erro ao baixar relatório')
+          return
+      }
+      
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `esg-report-${profile.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error(e)
+      alert('Erro ao baixar relatório')
+    }
+  }
+
   async function handleBuyTokens(amount: string) {
     if (!amount || Number(amount) <= 0) return
     try {
@@ -2212,6 +2252,23 @@ export default function Dashboard() {
                   </p>
                 </div>
               </section>
+              
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={handleDownloadReport}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  Baixar Relatório ESG (PDF)
+                </button>
+              </div>
+
               <section className="mt-6 bg-slate-900/80 p-6 rounded-2xl border border-emerald-900 space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div>

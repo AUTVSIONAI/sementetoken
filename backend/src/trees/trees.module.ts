@@ -8,6 +8,7 @@ import { BrigadesModule } from "../brigades/brigades.module"
 @Module({
   imports: [TypeOrmModule.forFeature([Tree]), BrigadesModule],
   controllers: [TreesController],
-  providers: [TreesService]
+  providers: [TreesService],
+  exports: [TreesService]
 })
 export class TreesModule {}

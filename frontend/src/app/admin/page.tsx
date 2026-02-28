@@ -17,6 +17,14 @@ const Marker = dynamic(
   () => import("react-leaflet").then((m) => m.Marker),
   { ssr: false }
 )
+const CircleMarker = dynamic(
+  () => import("react-leaflet").then((m) => m.CircleMarker),
+  { ssr: false }
+)
+const Popup = dynamic(
+  () => import("react-leaflet").then((m) => m.Popup),
+  { ssr: false }
+)
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
@@ -147,6 +155,36 @@ type AdminSection =
   | "apis"
   | "feed"
   | "brigades"
+  | "lots"
+  | "features"
+  | "tourism"
+  | "estimates"
+
+type AdminLot = {
+  id: string
+  projectId: string | null
+  projectName?: string | null
+  treeCount: number
+  price: number
+  status: string
+  createdAt: string
+}
+
+type AdminFeature = {
+  key: string
+  description: string
+  enabled: boolean
+}
+
+type AdminTourismPartner = {
+  id: string
+  name: string
+  type: string
+  description?: string | null
+  website?: string | null
+  apiEnabled?: boolean
+  apiProvider?: string | null
+}
 
 const EXTERNAL_SPECIES_PAGE_SIZE = 24
 
@@ -154,6 +192,8 @@ export default function AdminPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [allowed, setAllowed] = useState(false)
+  const [editingLotId, setEditingLotId] = useState<string | null>(null)
+  const [editingTourismPartnerId, setEditingTourismPartnerId] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [species, setSpecies] = useState<Species[]>([])
   const [externalSpecies, setExternalSpecies] = useState<ExternalSpecies[]>([])
@@ -312,6 +352,107 @@ export default function AdminPage() {
       longitude: number
     }[]
   >([])
+
+  const [lots, setLots] = useState<AdminLot[]>([])
+  const [lotForm, setLotForm] = useState({
+    projectId: "",
+    treeCount: "",
+    price: "",
+  })
+  const [features, setFeatures] = useState<AdminFeature[]>([])
+  const [tourismPartners, setTourismPartners] = useState<AdminTourismPartner[]>([])
+  const [tourismPartnerForm, setTourismPartnerForm] = useState({
+    name: "",
+    type: "hotel",
+    apiEnabled: false,
+    apiProvider: "",
+  })
+  const [estimates, setEstimates] = useState<any[]>([])
+  const [estimatesTokenizePercent, setEstimatesTokenizePercent] = useState(10)
+  const [featureForm, setFeatureForm] = useState({
+    key: "",
+    description: "",
+    enabled: false,
+  })
+
+  async function handleDeleteLot(id: string) {
+    if (!confirm("Tem certeza que deseja excluir este lote?")) return
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+
+    try {
+      const res = await fetch(`${API_URL}/lots/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error("Erro ao excluir lote")
+      setLots((prev) => prev.filter((l) => l.id !== id))
+    } catch (err: any) {
+      alert(err.message)
+    }
+  }
+
+  async function handleDeleteFeature(key: string) {
+    if (!confirm("Tem certeza que deseja excluir esta feature flag?")) return
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+
+    try {
+      const res = await fetch(`${API_URL}/features/${key}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error("Erro ao excluir feature flag")
+      setFeatures((prev) => prev.filter((f) => f.key !== key))
+    } catch (err: any) {
+      alert(err.message)
+    }
+  }
+
+  async function handleCreateFeature(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+
+    try {
+      const res = await fetch(`${API_URL}/features`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(featureForm)
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao criar feature flag")
+      }
+      const created = await res.json()
+      setFeatures((prev) => [...prev, created])
+      setFeatureForm({ key: "", description: "", enabled: false })
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  async function handleDeleteTourismPartner(id: string) {
+    if (!confirm("Tem certeza que deseja excluir este parceiro?")) return
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+
+    try {
+      const res = await fetch(`${API_URL}/tourism/partners/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error("Erro ao excluir parceiro")
+      setTourismPartners((prev) => prev.filter((p) => p.id !== id))
+    } catch (err: any) {
+      alert(err.message)
+    }
+  }
+
 
   async function handleCreateBrigade() {
     const token =
@@ -481,7 +622,10 @@ export default function AdminPage() {
             loadProducts(),
             loadTrees(),
             loadFeedActions(tokenParam),
-            loadBrigades(tokenParam)
+            loadBrigades(tokenParam),
+            loadLots(tokenParam),
+            loadFeatures(tokenParam),
+            loadTourismPartners(tokenParam)
           ])
         }
       } catch {
@@ -623,6 +767,51 @@ export default function AdminPage() {
         )
       } catch {
       }
+    }
+
+    async function loadLots(tokenValue: string) {
+      try {
+        const res = await fetch(`${API_URL}/lots`, {
+          headers: { Authorization: `Bearer ${tokenValue}` }
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setLots(
+          Array.isArray(data)
+            ? data.map((l: any) => ({
+                id: l.id,
+                projectId: l.project?.id || null,
+                projectName: l.project?.name || null,
+                treeCount: l.treeCount,
+                price: l.price,
+                status: l.status,
+                createdAt: l.createdAt
+              }))
+            : []
+        )
+      } catch {}
+    }
+
+    async function loadFeatures(tokenValue: string) {
+      try {
+        const res = await fetch(`${API_URL}/features`, {
+          headers: { Authorization: `Bearer ${tokenValue}` }
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setFeatures(Array.isArray(data) ? data : [])
+      } catch {}
+    }
+
+    async function loadTourismPartners(tokenValue: string) {
+      try {
+        const res = await fetch(`${API_URL}/tourism/partners`, {
+          headers: { Authorization: `Bearer ${tokenValue}` }
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setTourismPartners(Array.isArray(data) ? data : [])
+      } catch {}
     }
 
     async function loadProjects(tokenValue: string) {
@@ -1122,6 +1311,257 @@ export default function AdminPage() {
       setError(err.message || "Erro inesperado")
     }
   }
+
+  async function handleCreateLot(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    if (editingLotId) {
+        await handleUpdateLot(e)
+        return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/lots`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId: lotForm.projectId || null,
+          treeCount: lotForm.treeCount ? parseInt(lotForm.treeCount) : 0,
+          price: lotForm.price ? parseFloat(lotForm.price) : 0
+        })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao criar lote")
+      }
+      const created = await res.json()
+      setLots((prev) => [
+        ...prev,
+        {
+          id: created.id,
+          projectId: created.project?.id || null,
+          projectName: created.project?.name || null,
+          treeCount: created.treeCount,
+          price: created.price,
+          status: created.status,
+          createdAt: created.createdAt
+        }
+      ])
+      setLotForm({
+        projectId: "",
+        treeCount: "",
+        price: ""
+      })
+    } catch (err: any) {
+      setError(err.message || "Erro inesperado")
+    }
+  }
+
+  async function handleUpdateLot(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingLotId) return
+    setError("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+    try {
+      const res = await fetch(`${API_URL}/lots/${editingLotId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          projectId: lotForm.projectId || null,
+          treeCount: lotForm.treeCount ? parseInt(lotForm.treeCount) : 0,
+          price: lotForm.price ? parseFloat(lotForm.price) : 0
+        })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao atualizar lote")
+      }
+      const updated = await res.json()
+      setLots((prev) => prev.map((l) => (l.id === editingLotId ? {
+          ...l,
+          projectId: updated.project?.id || null,
+          projectName: updated.project?.name || null,
+          treeCount: updated.treeCount,
+          price: updated.price,
+          status: updated.status
+      } : l)))
+      cancelEditingLot()
+    } catch (err: any) {
+      setError(err.message || "Erro inesperado")
+    }
+  }
+
+  function startEditingLot(lot: AdminLot) {
+    setEditingLotId(lot.id)
+    setLotForm({
+      projectId: lot.projectId || "",
+      treeCount: lot.treeCount.toString(),
+      price: lot.price.toString()
+    })
+  }
+
+  function cancelEditingLot() {
+    setEditingLotId(null)
+    setLotForm({
+      projectId: "",
+      treeCount: "",
+      price: ""
+    })
+  }
+
+  async function handleToggleFeature(key: string, enabled: boolean) {
+    const token = localStorage.getItem("accessToken")
+    if (!token) return
+    try {
+      const res = await fetch(`${API_URL}/features/${key}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ enabled: !enabled })
+      })
+      if (!res.ok) return
+      setFeatures((prev) =>
+        prev.map((f) => (f.key === key ? { ...f, enabled: !enabled } : f))
+      )
+    } catch {}
+  }
+
+  async function handleCreateTourismPartner(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    if (editingTourismPartnerId) {
+        await handleUpdateTourismPartner(e)
+        return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/tourism/partners`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: tourismPartnerForm.name,
+          type: tourismPartnerForm.type,
+          apiEnabled: tourismPartnerForm.apiEnabled,
+          apiProvider: tourismPartnerForm.apiProvider || null
+        })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao criar parceiro")
+      }
+      const created = await res.json()
+      setTourismPartners((prev) => [...prev, created])
+      setTourismPartnerForm({
+        name: "",
+        type: "hotel",
+        apiEnabled: false,
+        apiProvider: ""
+      })
+    } catch (err: any) {
+      setError(err.message || "Erro inesperado")
+    }
+  }
+
+  async function handleUpdateTourismPartner(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingTourismPartnerId) return
+    setError("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+    try {
+      const res = await fetch(`${API_URL}/tourism/partners/${editingTourismPartnerId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: tourismPartnerForm.name,
+          type: tourismPartnerForm.type,
+          apiEnabled: tourismPartnerForm.apiEnabled,
+          apiProvider: tourismPartnerForm.apiProvider || null
+        })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao atualizar parceiro")
+      }
+      const updated = await res.json()
+      setTourismPartners((prev) => prev.map((p) => (p.id === editingTourismPartnerId ? updated : p)))
+      cancelEditingTourismPartner()
+    } catch (err: any) {
+      setError(err.message || "Erro inesperado")
+    }
+  }
+
+  function startEditingTourismPartner(partner: AdminTourismPartner) {
+    setEditingTourismPartnerId(partner.id)
+    setTourismPartnerForm({
+      name: partner.name,
+      type: partner.type,
+      apiEnabled: partner.apiEnabled || false,
+      apiProvider: partner.apiProvider || ""
+    })
+  }
+
+  function cancelEditingTourismPartner() {
+    setEditingTourismPartnerId(null)
+    setTourismPartnerForm({
+      name: "",
+      type: "hotel",
+      apiEnabled: false,
+      apiProvider: ""
+    })
+  }
+
+  async function loadEstimates(tokenValue: string) {
+    try {
+      const res = await fetch(`${API_URL}/esg/trees/municipalities`, {
+        headers: { Authorization: `Bearer ${tokenValue}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setEstimates(Array.isArray(data) ? data : [])
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null
+    if (activeSection === "estimates" && token) {
+      loadEstimates(token)
+    }
+  }, [activeSection])
 
   async function loadWalletDetail(userId: string) {
     const token =
@@ -1732,6 +2172,16 @@ export default function AdminPage() {
           </button>
           <button
             className={
+              activeSection === "estimates"
+                ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50"
+            }
+            onClick={() => setActiveSection("estimates")}
+          >
+            Estimativas (MapBiomas)
+          </button>
+          <button
+            className={
               activeSection === "regions"
                 ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
                 : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50"
@@ -1800,6 +2250,89 @@ export default function AdminPage() {
               plataforma em um só lugar.
             </p>
           </header>
+
+          {activeSection === "estimates" && (
+            <section className="space-y-6">
+              <div className="bg-slate-900/80 p-6 rounded-2xl border border-emerald-900">
+                <h2 className="text-xl font-bold text-emerald-50 mb-4">
+                  Estimativas de Árvores (MapBiomas 2024)
+                </h2>
+                <div className="mb-4 flex items-center gap-4">
+                  <label className="text-sm text-emerald-200">
+                    Percentual para Tokenização:
+                  </label>
+                  <select
+                    value={estimatesTokenizePercent}
+                    onChange={(e) => setEstimatesTokenizePercent(Number(e.target.value))}
+                    className="bg-slate-950 border border-emerald-900 rounded px-3 py-1 text-emerald-50"
+                  >
+                    <option value={5}>5%</option>
+                    <option value={10}>10%</option>
+                    <option value={20}>20%</option>
+                    <option value={50}>50%</option>
+                  </select>
+                </div>
+                <div className="h-[600px] w-full rounded-xl overflow-hidden border border-emerald-900/50 relative z-0">
+                  <MapContainer
+                    center={[-14.235, -51.925]}
+                    zoom={4}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
+                    {estimates.map((est) => (
+                      est.lat && est.lon && (
+                        <CircleMarker
+                          key={est.municipalityIbgeId}
+                          center={[est.lat, est.lon]}
+                          radius={5}
+                          pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.7 }}
+                        >
+                          <Popup>
+                            <strong>{est.municipalityName} - {est.uf}</strong><br/>
+                            Bioma: {est.biome}<br/>
+                            Árvores: {est.treesEstimate.toLocaleString('pt-BR')}<br/>
+                            Tokens ({estimatesTokenizePercent}%): {Math.floor(est.treesEstimate * (estimatesTokenizePercent / 100)).toLocaleString('pt-BR')}
+                          </Popup>
+                        </CircleMarker>
+                      )
+                    ))}
+                  </MapContainer>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-left text-sm text-emerald-100/80">
+                    <thead className="text-xs uppercase text-emerald-500 border-b border-emerald-900/50">
+                      <tr>
+                        <th className="px-4 py-3">Município</th>
+                        <th className="px-4 py-3">UF</th>
+                        <th className="px-4 py-3">Bioma</th>
+                        <th className="px-4 py-3 text-right">Árvores Est.</th>
+                        <th className="px-4 py-3 text-right">Tokens ({estimatesTokenizePercent}%)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-emerald-900/20">
+                      {estimates.slice(0, 50).map((est) => (
+                        <tr key={est.municipalityIbgeId} className="hover:bg-emerald-900/10">
+                          <td className="px-4 py-3">{est.municipalityName}</td>
+                          <td className="px-4 py-3">{est.uf}</td>
+                          <td className="px-4 py-3">{est.biome}</td>
+                          <td className="px-4 py-3 text-right">{est.treesEstimate.toLocaleString('pt-BR')}</td>
+                          <td className="px-4 py-3 text-right">
+                            {Math.floor(est.treesEstimate * (estimatesTokenizePercent / 100)).toLocaleString('pt-BR')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-xs text-center mt-2 text-emerald-500">
+                    Exibindo os primeiros 50 registros de {estimates.length}.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
 
           {activeSection === "overview" && (
             <>
@@ -2287,6 +2820,358 @@ export default function AdminPage() {
                       ))}
                     </tbody>
                   </table>
+                )}
+              </div>
+            </section>
+          )}
+
+          {activeSection === "lots" && (
+            <section className="bg-slate-900/80 p-6 rounded-2xl border border-emerald-900">
+              <h2 className="text-xl font-bold mb-2 text-emerald-100">
+                Lotes Corporativos
+              </h2>
+              <p className="text-sm text-emerald-200/80 mb-6">
+                Gerencie lotes de árvores disponíveis para compra corporativa.
+              </p>
+              
+              <div className="mb-8 p-4 bg-slate-950/50 rounded-xl border border-emerald-900/50">
+                <h3 className="text-sm font-semibold text-emerald-100 mb-3">
+                  {editingLotId ? "Editar Lote" : "Novo Lote"}
+                </h3>
+                <form onSubmit={handleCreateLot} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Projeto
+                    </label>
+                    <select
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={lotForm.projectId}
+                      onChange={(e) => setLotForm({...lotForm, projectId: e.target.value})}
+                    >
+                      <option value="">Selecione um projeto...</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Quantidade de Árvores
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={lotForm.treeCount}
+                      onChange={(e) => setLotForm({...lotForm, treeCount: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Preço Total (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={lotForm.price}
+                      onChange={(e) => setLotForm({...lotForm, price: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="bg-emerald-500 text-emerald-950 py-2 px-4 rounded-full text-sm font-semibold hover:bg-emerald-400 whitespace-nowrap"
+                    >
+                      {editingLotId ? "Salvar" : "Criar Lote"}
+                    </button>
+                    {editingLotId && (
+                      <button
+                        type="button"
+                        onClick={cancelEditingLot}
+                        className="bg-slate-700 text-slate-300 py-2 px-4 rounded-full text-sm font-semibold hover:bg-slate-600"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-emerald-100">
+                  <thead className="text-xs text-emerald-400 uppercase bg-emerald-900/20">
+                    <tr>
+                      <th className="px-4 py-3">ID</th>
+                      <th className="px-4 py-3">Projeto</th>
+                      <th className="px-4 py-3">Árvores</th>
+                      <th className="px-4 py-3">Preço</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3">Criado em</th>
+                      <th className="px-4 py-3">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-emerald-900/30">
+                    {lots.map((lot) => (
+                      <tr key={lot.id} className="hover:bg-emerald-900/10">
+                        <td className="px-4 py-3 font-mono text-xs opacity-70">
+                          {lot.id.substring(0, 8)}...
+                        </td>
+                        <td className="px-4 py-3">
+                          {lot.projectName || "N/A"}
+                        </td>
+                        <td className="px-4 py-3">{lot.treeCount}</td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(lot.price)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            lot.status === "available" 
+                              ? "bg-emerald-900/50 text-emerald-300" 
+                              : "bg-slate-700 text-slate-300"
+                          }`}>
+                            {lot.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {new Date(lot.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 flex gap-3">
+                          <button
+                            onClick={() => startEditingLot(lot)}
+                            className="text-blue-400 hover:text-blue-300 text-xs font-semibold"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLot(lot.id)}
+                            className="text-red-400 hover:text-red-300 text-xs font-semibold"
+                          >
+                            Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {lots.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-emerald-500/50">
+                          Nenhum lote encontrado.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {activeSection === "features" && (
+            <section className="bg-slate-900/80 p-6 rounded-2xl border border-emerald-900">
+              <h2 className="text-xl font-bold mb-2 text-emerald-100">
+                Feature Flags
+              </h2>
+              <p className="text-sm text-emerald-200/80 mb-6">
+                Controle a disponibilidade de funcionalidades na plataforma.
+              </p>
+
+              <div className="mb-8 p-4 bg-slate-950/50 rounded-xl border border-emerald-900/50">
+                <h3 className="text-sm font-semibold text-emerald-100 mb-3">
+                  Nova Feature Flag
+                </h3>
+                <form onSubmit={handleCreateFeature} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Chave (Key)
+                    </label>
+                    <input
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={featureForm.key}
+                      onChange={(e) => setFeatureForm({...featureForm, key: e.target.value})}
+                      required
+                      placeholder="ex: module_esg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Descrição
+                    </label>
+                    <input
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={featureForm.description}
+                      onChange={(e) => setFeatureForm({...featureForm, description: e.target.value})}
+                      placeholder="Descrição da funcionalidade"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 pb-2">
+                    <input
+                      type="checkbox"
+                      id="featureEnabled"
+                      className="rounded border-emerald-800 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                      checked={featureForm.enabled}
+                      onChange={(e) => setFeatureForm({...featureForm, enabled: e.target.checked})}
+                    />
+                    <label htmlFor="featureEnabled" className="text-sm text-emerald-200">
+                      Habilitada por padrão?
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-emerald-500 text-emerald-950 py-2 px-4 rounded-full text-sm font-semibold hover:bg-emerald-400"
+                  >
+                    Criar Feature
+                  </button>
+                </form>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {features.map((feature) => (
+                  <div key={feature.key} className="bg-slate-950/50 border border-emerald-900/50 rounded-xl p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-emerald-100">
+                          {feature.key}
+                        </h3>
+                        {feature.description && (
+                          <p className="text-xs text-emerald-400/60 mt-1">
+                            {feature.description}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleToggleFeature(feature.key, feature.enabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                          feature.enabled ? "bg-emerald-500" : "bg-slate-700"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            feature.enabled ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteFeature(feature.key)}
+                      className="self-end text-red-400 hover:text-red-300 text-xs"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                ))}
+                {features.length === 0 && (
+                  <p className="col-span-full text-center text-emerald-500/50 py-8">
+                    Nenhuma feature flag encontrada.
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {activeSection === "tourism" && (
+            <section className="bg-slate-900/80 p-6 rounded-2xl border border-emerald-900">
+              <h2 className="text-xl font-bold mb-2 text-emerald-100">
+                Parceiros de Turismo
+              </h2>
+              <p className="text-sm text-emerald-200/80 mb-6">
+                Gerencie parceiros para o marketplace de turismo verde.
+              </p>
+
+              <div className="mb-8 p-4 bg-slate-950/50 rounded-xl border border-emerald-900/50">
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-semibold text-emerald-100">
+                      {editingTourismPartnerId ? "Editar Parceiro" : "Novo Parceiro"}
+                    </h3>
+                    {editingTourismPartnerId && (
+                        <button onClick={cancelEditingTourismPartner} className="text-xs text-red-400 hover:text-red-300">
+                            Cancelar Edição
+                        </button>
+                    )}
+                </div>
+                <form onSubmit={handleCreateTourismPartner} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Nome
+                    </label>
+                    <input
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={tourismPartnerForm.name}
+                      onChange={(e) => setTourismPartnerForm({...tourismPartnerForm, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-emerald-200/80 mb-1">
+                      Tipo
+                    </label>
+                    <select
+                      className="w-full border border-emerald-800 rounded px-3 py-2 bg-slate-950 text-emerald-50 text-sm"
+                      value={tourismPartnerForm.type}
+                      onChange={(e) => setTourismPartnerForm({...tourismPartnerForm, type: e.target.value})}
+                    >
+                      <option value="hotel">Hotel</option>
+                      <option value="airline">Companhia Aérea</option>
+                      <option value="tour">Agência de Turismo</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 pb-2">
+                    <input
+                      type="checkbox"
+                      id="apiEnabled"
+                      className="rounded border-emerald-800 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
+                      checked={tourismPartnerForm.apiEnabled}
+                      onChange={(e) => setTourismPartnerForm({...tourismPartnerForm, apiEnabled: e.target.checked})}
+                    />
+                    <label htmlFor="apiEnabled" className="text-sm text-emerald-200">
+                      Integração via API?
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-emerald-500 text-emerald-950 py-2 px-4 rounded-full text-sm font-semibold hover:bg-emerald-400"
+                  >
+                    {editingTourismPartnerId ? "Atualizar" : "Adicionar"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tourismPartners.map((partner) => (
+                  <div key={partner.id} className="bg-slate-950/50 border border-emerald-900/50 rounded-xl p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-emerald-100">{partner.name}</h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-300 border border-emerald-800/50 uppercase">
+                        {partner.type}
+                      </span>
+                    </div>
+                    <div className="text-xs text-emerald-400/60 space-y-1">
+                      <p>API: {partner.apiEnabled ? "Ativa" : "Inativa"}</p>
+                      {partner.apiProvider && (
+                        <p>Provider: {partner.apiProvider}</p>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-auto">
+                        <button
+                          onClick={() => startEditingTourismPartner(partner)}
+                          className="text-blue-400 hover:text-blue-300 text-xs"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTourismPartner(partner.id)}
+                          className="text-red-400 hover:text-red-300 text-xs"
+                        >
+                          Excluir
+                        </button>
+                    </div>
+                  </div>
+                ))}
+                {tourismPartners.length === 0 && (
+                  <p className="col-span-full text-center text-emerald-500/50 py-8">
+                    Nenhum parceiro encontrado.
+                  </p>
                 )}
               </div>
             </section>

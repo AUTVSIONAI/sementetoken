@@ -23,23 +23,31 @@ import { StripeModule } from "./stripe/stripe.module"
 import { BlockchainModule } from "./blockchain/blockchain.module"
 import { NftModule } from "./nft/nft.module"
 import { EsgModule } from "./esg/esg.module"
+import { LotsModule } from "./lots/lots.module"
+import { ExperienceModule } from "./experience/experience.module"
+import { TourismModule } from "./tourism/tourism.module"
+import { FeaturesModule } from "./features/features.module"
+import { TokenomicsModule } from "./tokenomics/tokenomics.module"
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), "uploads"),
-      serveRoot: "/uploads"
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
     TypeOrmModule.forRoot({
       type: "postgres",
-      host: process.env.DB_HOST || "localhost",
-      port: parseInt(process.env.DB_PORT, 10) || 5432,
-      username: process.env.DB_USER || "admin",
-      password: process.env.DB_PASSWORD || "sementetoken",
-      database: process.env.DB_NAME || "sementetoken",
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
       entities: [__dirname + "/**/*.entity{.ts,.js}"],
-      synchronize: true
+      synchronize: true,
+      dropSchema: false,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, "..", "uploads"),
+      serveRoot: "/uploads",
     }),
     UsersModule,
     TreesModule,
@@ -60,7 +68,12 @@ import { EsgModule } from "./esg/esg.module"
     StripeModule,
     BlockchainModule,
     NftModule,
-    EsgModule
+    EsgModule,
+    LotsModule,
+    ExperienceModule,
+    TourismModule,
+    FeaturesModule,
+    TokenomicsModule
   ]
 })
 export class AppModule {}

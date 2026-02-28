@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { EsgService } from './esg.service';
-import { EsgController } from './esg.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Tree } from '../trees/tree.entity';
+import { EsgController } from './esg.controller';
+import { EsgService } from './esg.service';
+import { TreesModule } from '../trees/trees.module';
 import { User } from '../users/user.entity';
+import { TreeEstimate } from './tree-estimate.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Tree, User])],
+  imports: [TypeOrmModule.forFeature([User, TreeEstimate]), TreesModule],
   controllers: [EsgController],
   providers: [EsgService],
-  exports: [EsgService],
 })
 export class EsgModule {}

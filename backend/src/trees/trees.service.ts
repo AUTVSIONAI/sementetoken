@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
 import { Repository } from "typeorm"
-import { Tree } from "./tree.entity"
+import { Tree, TreeStatus } from "./tree.entity"
 import { CreateTreeDto } from "./trees.dto"
 import { BrigadesService } from "../brigades/brigades.service"
 
@@ -14,12 +14,18 @@ export class TreesService {
   ) {}
 
   findAll(): Promise<Tree[]> {
-    return this.treesRepository.find()
+    return this.treesRepository.find({ relations: ['speciesType', 'brigade', 'lot', 'project'] })
   }
 
   async create(payload: CreateTreeDto): Promise<Tree> {
     const tree = this.treesRepository.create({
-      species: payload.species,
+      species: payload.species || 'Unknown',
+      speciesType: payload.speciesId ? { id: payload.speciesId } : null,
+      brigade: payload.brigadeId ? { id: payload.brigadeId } : null,
+      biome: payload.biome || null,
+      state: payload.state || null,
+      photoUrl: payload.photoUrl || payload.imageUrl || null,
+      status: TreeStatus.PENDING,
       plantedAt: payload.plantedAt ? new Date(payload.plantedAt) : null,
       growthStage: payload.growthStage || null,
       estimatedCo2Total:
@@ -35,6 +41,70 @@ export class TreesService {
           : null
     })
     return this.treesRepository.save(tree)
+  }
+
+  async validate(id: string): Promise<Tree> {
+    const tree = await this.treesRepository.findOne({ where: { id } })
+    if (!tree) throw new BadRequestException("Árvore não encontrada")
+    tree.status = TreeStatus.VALIDATED
+    return this.treesRepository.save(tree)
+  }
+
+  async assignLot(treeId: string, lotId: string): Promise<Tree> {
+    const tree = await this.treesRepository.findOne({ where: { id: treeId } })
+    if (!tree) throw new BadRequestException("Árvore não encontrada")
+    
+    tree.lot = { id: lotId } as any
+    return this.treesRepository.save(tree)
+  }
+
+  async countForUser(userId: string): Promise<number> {
+    const result = await this.treesRepository.query(
+      "SELECT COUNT(*)::int as count FROM tokens WHERE user_id = $1",
+      [userId]
+    )
+    return result[0]?.count || 0
+  }
+
+  async findAvailableInLot(lotId: string, quantity: number): Promise<Tree[]> {
+    return this.treesRepository.find({
+      where: {
+        lot: { id: lotId },
+        status: TreeStatus.VALIDATED
+      },
+      take: quantity
+    });
+  }
+
+  async getStatsForUser(userId: string): Promise<{ count: number; co2: number }> {
+    const result = await this.treesRepository.query(
+      `SELECT 
+         COUNT(t.id)::int as count, 
+         COALESCE(SUM(t.estimated_co2_total), 0)::float as co2 
+       FROM tokens tok
+       JOIN trees t ON tok.tree_id = t.id
+       WHERE tok.user_id = $1`,
+      [userId]
+    );
+    return {
+      count: result[0]?.count || 0,
+      co2: result[0]?.co2 || 0
+    };
+  }
+
+  async getTreesForUser(userId: string): Promise<any[]> {
+    return this.treesRepository.query(
+      `SELECT 
+         t.id, t.biome, t.state, t.status, t.tx_hash,
+         COALESCE(s.common_name, t.species) as common_name,
+         p.name as project_name
+       FROM tokens tok
+       JOIN trees t ON tok.tree_id = t.id
+       LEFT JOIN species s ON t.species_id = s.id
+       LEFT JOIN projects p ON t.project_id = p.id
+       WHERE tok.user_id = $1`,
+      [userId]
+    );
   }
 
   async plantForUser(

@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     title: "SementeToken",
     description: "Plataforma de Reflorestamento e Tokenização ESG",
     images: ["/logo/logo.jpeg"]
+  },
+  icons: {
+    icon: "/logo/sementetoken-32.png",
+    shortcut: "/logo/sementetoken-32.png",
+    apple: "/logo/sementetoken-256.png",
   }
 }
 
@@ -76,6 +81,18 @@ export default function RootLayout({
                   Marketplace
                 </a>
                 <a
+                  href="/whitepaper"
+                  className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
+                >
+                  Whitepaper
+                </a>
+                <a
+                  href="/roadmap"
+                  className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
+                >
+                  Roadmap
+                </a>
+                <a
                   href="/dashboard"
                   className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
                 >
@@ -97,8 +114,11 @@ export default function RootLayout({
                 <p>
                   &copy; 2026 SementeToken. Todos os direitos reservados.
                   <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-800/50">
-                    v2.4.0 (Meta Fixes)
+                    v2.5.0 (Expansion)
                   </span>
+                </p>
+                <p className="text-emerald-500/60">
+                  Contato oficial: sementetoken@gmail.com
                 </p>
                 <p>
                   Contato: <a href="mailto:sementetoken@gmail.com" className="text-emerald-400 hover:text-emerald-300 transition-colors">sementetoken@gmail.com</a>

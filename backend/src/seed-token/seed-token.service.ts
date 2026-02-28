@@ -4,7 +4,7 @@ import { Repository } from "typeorm"
 import { SeedTransaction } from "./seed-transaction.entity"
 import { Wallet } from "../wallet/wallet.entity"
 import { User } from "../users/user.entity"
-import { Tree } from "../trees/tree.entity"
+import { Tree, TreeStatus } from "../trees/tree.entity"
 import { WalletService } from "../wallet/wallet.service"
 import { PolygonService } from "./polygon.service"
 
@@ -34,6 +34,10 @@ export class SeedTokenService {
       throw new Error("Árvore não encontrada para Semente Token")
     }
 
+    if (tree.status !== TreeStatus.VALIDATED) {
+      throw new Error("A árvore precisa estar validada (status=validated) para gerar o NFT.")
+    }
+
     const address = user.email
     const mintResult = await this.polygonService.mintTreeToken({
       userAddress: address,
@@ -52,6 +56,8 @@ export class SeedTokenService {
     await this.seedTransactionsRepository.save(tx)
 
     tree.nftId = mintResult.txId
+    tree.status = TreeStatus.MINTED
+    tree.txHash = mintResult.txId
     await this.treesRepository.save(tree)
 
     return mintResult

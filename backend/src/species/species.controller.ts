@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Post, Patch, Param, UseGuards, Delete } from "@nestjs/common"
 import { SpeciesService } from "./species.service"
 import { Species } from "./species.entity"
 import { JwtAuthGuard } from "../auth/jwt-auth.guard"
@@ -20,6 +20,8 @@ export class SpeciesController {
     return this.speciesService.fetchFromPublicApi()
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
   create(
     @Body()
@@ -28,6 +30,10 @@ export class SpeciesController {
       scientificName?: string
       biome?: string
       imageUrl?: string
+      baseCost?: number
+      salePrice?: number
+      carbonEstimation?: number
+      description?: string
     }
   ): Promise<Species> {
     return this.speciesService.create(body)
@@ -35,8 +41,35 @@ export class SpeciesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @Patch(":id")
+  update(
+    @Param("id") id: string,
+    @Body()
+    body: {
+      commonName?: string
+      scientificName?: string
+      biome?: string
+      imageUrl?: string
+      baseCost?: number
+      salePrice?: number
+      carbonEstimation?: number
+      description?: string
+    }
+  ): Promise<Species> {
+    return this.speciesService.update(id, body)
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post("enrich-images")
   enrichImages() {
     return this.speciesService.enrichMissingImages()
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Delete(":id")
+  remove(@Param("id") id: string) {
+    return this.speciesService.remove(id)
   }
 }

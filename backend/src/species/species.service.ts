@@ -48,6 +48,10 @@ export class SpeciesService {
     scientificName?: string
     biome?: string
     imageUrl?: string
+    baseCost?: number
+    salePrice?: number
+    carbonEstimation?: number
+    description?: string
   }): Promise<Species> {
     let finalImage = payload.imageUrl || null
     if (!finalImage) {
@@ -60,9 +64,44 @@ export class SpeciesService {
       commonName: payload.commonName,
       scientificName: payload.scientificName || null,
       biome: payload.biome || null,
-      imageUrl: finalImage
+      imageUrl: finalImage,
+      baseCost: payload.baseCost ?? 50,
+      salePrice: payload.salePrice ?? 100,
+      carbonEstimation: payload.carbonEstimation ?? 0,
+      description: payload.description || null
     })
     return this.speciesRepository.save(species)
+  }
+
+  async update(id: string, payload: {
+    commonName?: string
+    scientificName?: string
+    biome?: string
+    imageUrl?: string
+    baseCost?: number
+    salePrice?: number
+    carbonEstimation?: number
+    description?: string
+  }): Promise<Species> {
+    const species = await this.speciesRepository.findOne({ where: { id } })
+    if (!species) {
+      throw new Error("Espécie não encontrada")
+    }
+    
+    if (payload.commonName !== undefined) species.commonName = payload.commonName
+    if (payload.scientificName !== undefined) species.scientificName = payload.scientificName
+    if (payload.biome !== undefined) species.biome = payload.biome
+    if (payload.imageUrl !== undefined) species.imageUrl = payload.imageUrl
+    if (payload.baseCost !== undefined) species.baseCost = payload.baseCost
+    if (payload.salePrice !== undefined) species.salePrice = payload.salePrice
+    if (payload.carbonEstimation !== undefined) species.carbonEstimation = payload.carbonEstimation
+    if (payload.description !== undefined) species.description = payload.description
+
+    return this.speciesRepository.save(species)
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.speciesRepository.delete(id)
   }
 
   async fetchFromPublicApi(): Promise<ExternalSpecies[]> {

@@ -1,0 +1,27 @@
+municipio_id_ibge,municipio_nome,uf,biome,area_ha,trees_estimate,tokens_10pct,lat,lon
+1100015,Alta Floresta D'Oeste,RO,Amazônia,1500.75,900450,90045,-11.93,-61.99
+1100023,Ariquemes,RO,Amazônia,2000,1200000,120000,-9.91,-63.04
+1200013,Acrelândia,AC,Amazônia,1500,900000,90000,-9.82,-67.08
+1302603,Manaus,AM,Amazônia,5000,3000000,300000,-3.11,-60.02
+1501402,Belém,PA,Amazônia,3000,1800000,180000,-1.45,-48.5
+1721000,Palmas,TO,Cerrado,1200,360000,36000,-10.16,-48.33
+2111300,São Luís,MA,Mata Atlântica,800,320000,32000,-2.53,-44.28
+2211001,Teresina,PI,Caatinga,900,180000,18000,-5.09,-42.8
+2304400,Fortaleza,CE,Caatinga,100,20000,2000,-3.73,-38.52
+2408102,Natal,RN,Mata Atlântica,200,80000,8000,-5.79,-35.2
+2507507,João Pessoa,PB,Mata Atlântica,300,120000,12000,-7.11,-34.86
+2611606,Recife,PE,Mata Atlântica,400,160000,16000,-8.05,-34.88
+2704302,Maceió,AL,Mata Atlântica,500,200000,20000,-9.66,-35.73
+2800308,Aracaju,SE,Mata Atlântica,600,240000,24000,-10.94,-37.07
+2927408,Salvador,BA,Mata Atlântica,700,280000,28000,-12.97,-38.5
+3106200,Belo Horizonte,MG,Cerrado,1000,300000,30000,-19.91,-43.93
+3205309,Vitória,ES,Mata Atlântica,1100,440000,44000,-20.31,-40.33
+3304557,Rio de Janeiro,RJ,Mata Atlântica,1200,480000,48000,-22.9,-43.17
+3550308,São Paulo,SP,Mata Atlântica,1300,520000,52000,-23.55,-46.63
+4106902,Curitiba,PR,Mata Atlântica,1400,560000,56000,-25.42,-49.27
+4205407,Florianópolis,SC,Mata Atlântica,1500,600000,60000,-27.59,-48.54
+4314902,Porto Alegre,RS,Pampa,1600,160000,16000,-30.03,-51.22
+5002704,Campo Grande,MS,Cerrado,1700,510000,51000,-20.46,-54.62
+5103403,Cuiabá,MT,Cerrado,1800,540000,54000,-15.6,-56.09
+5208707,Goiânia,GO,Cerrado,1900,570000,57000,-16.68,-49.26
+5300108,Brasília,DF,Cerrado,2000,600000,60000,-15.78,-47.92
