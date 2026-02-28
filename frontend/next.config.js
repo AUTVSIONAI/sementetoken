@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
   reactStrictMode: true,
   async rewrites() {
     console.log('API_URL from environment:', process.env.API_URL);

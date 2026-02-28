@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.2-FIX-TX-ENCODING-ES2020")
+    console.log("APP VERSION: v3.1.3-CHECK-TX-DATA")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1326,6 +1326,10 @@ export default function Dashboard() {
          // Force explicit data encoding to ensure payload is not empty
          const txData = treeContract.interface.encodeFunctionData("plantTree", [value])
          console.log("Encoded Tx Data:", txData)
+
+         if (!txData || txData === "0x") {
+            throw new Error("CRITICAL ERROR: Transaction data is empty. Please clear browser cache and try again.")
+         }
 
          const tx = await signer.sendTransaction({
              to: TREE_ADDRESS,
@@ -2070,6 +2074,7 @@ export default function Dashboard() {
           <p className="mt-1 font-semibold text-sm text-emerald-50">
             Painel do usuário
           </p>
+          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.3</p>
         </div>
         <nav className="flex-1 space-y-1 text-sm">
           <button
