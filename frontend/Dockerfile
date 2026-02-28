@@ -8,6 +8,7 @@ RUN npm ci
 
 # Stage 2: Build the app
 FROM node:18-alpine AS builder
+ARG BUILD_DATE
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

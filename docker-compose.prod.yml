@@ -50,6 +50,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
+        BUILD_DATE: "2026-02-28-force-rebuild-v3.1.9-final"
         API_URL: http://backend:3000
         NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_SEME_ADDRESS: ${SEME_ADDRESS}
