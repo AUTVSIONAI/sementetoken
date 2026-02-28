@@ -1268,6 +1268,20 @@ export default function Dashboard() {
         console.warn("Could not check paused status:", err.message)
       }
 
+      // Check Planting Price
+      try {
+        const price = await treeContract.plantingPrice()
+        console.log("6.2. Planting Price (Wei):", price.toString())
+        if (value < price) {
+            const msg = `Valor insuficiente para plantar 1 árvore. O preço mínimo é ${formatUnits(price, 18)} SEME.`
+            console.error(msg)
+            // Não bloqueamos aqui hard, mas avisamos no console. 
+            // Se a lógica do contrato for diferente, o erro real virá da transação.
+        }
+      } catch (err: any) {
+        console.warn("Could not check planting price:", err.message)
+      }
+
       // Check Allowance
       const currentAllowance = await tokenContract.allowance(signerAddress, TREE_ADDRESS)
       console.log("7. Current Allowance (Wei):", currentAllowance.toString())
