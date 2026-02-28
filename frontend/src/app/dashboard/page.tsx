@@ -617,7 +617,10 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.9 (Store Fix)")
+    console.log(
+      "%cAPP VERSION: v3.1.9-FINAL (STORE FIX CONFIRMED)",
+      "background: #ff0000; color: #ffffff; font-size: 20px; font-weight: bold; padding: 10px;"
+    )
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -2134,7 +2137,7 @@ export default function Dashboard() {
           <p className="mt-1 font-semibold text-sm text-emerald-50">
             Painel do usuário
           </p>
-          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.9 (Store Fix)</p>
+          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.9-FINAL (STORE FIX)</p>
         </div>
         <nav className="flex-1 space-y-1 text-sm">
           <button
