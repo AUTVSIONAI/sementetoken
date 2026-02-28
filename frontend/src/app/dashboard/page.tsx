@@ -1294,12 +1294,24 @@ export default function Dashboard() {
 
       console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
       
-      // Tentativa direta sem estimateGas, pois o erro de gas estimation pode ser misleading
-      // em algumas redes ou versões de nós RPC.
-      // Adicionamos gasLimit manual como fallback seguro (aumentado para 1.000.000 para evitar OOG).
+      // Tentar estimar gás primeiro para ver se detectamos erro antes de enviar
+      let finalGasLimit = BigInt(6000000) // Fallback seguro alto
+      
+      try {
+         const estimated = await treeContract.estimateGas.plantTree(value)
+         console.log("Gas estimado:", estimated.toString())
+         // Adicionar margem de segurança de 20%
+         finalGasLimit = (estimated * 120n) / 100n
+      } catch (gasError: any) {
+         console.warn("Falha ao estimar gás (possível erro na transação):", gasError.message)
+         // Mantemos o fallback de 6M, mas avisamos no console
+      }
+      
+      console.log("Usando Gas Limit:", finalGasLimit.toString())
+
       try {
               const tx = await treeContract.plantTree(value, {
-                gasLimit: 3000000 // Limite de gás aumentado para 3.000.000 (correção de Out of Gas)
+                gasLimit: finalGasLimit
               })
               console.log("PlantTree Tx Hash:", tx.hash)
         setSemeActionMessage("Transação de plantio enviada. Aguardando confirmação...")
