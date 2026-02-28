@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.4-FIX-TX-POPULATE")
+    console.log("APP VERSION: v3.1.5-DEBUG-STATIC-CALL")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1317,7 +1317,24 @@ export default function Dashboard() {
          finalGasLimit = (estimated * BigInt(120)) / BigInt(100)
       } catch (gasError: any) {
          console.warn("Falha ao estimar gás (possível erro na transação):", gasError.message)
-         // Mantemos o fallback de 6M, mas avisamos no console
+         
+         // Se a estimativa falhou, TENTE simular a chamada para pegar o motivo do erro
+         try {
+             await treeContract.plantTree.staticCall(value)
+         } catch (staticError: any) {
+             console.error("Simulação de transação falhou com erro:", staticError)
+             // Lança erro claro para o usuário e ABORTA
+             let reason = staticError.reason || staticError.message || "Motivo desconhecido"
+             if (reason.includes("execution reverted")) {
+                // Tenta limpar a mensagem se for muito longa
+                const match = reason.match(/execution reverted: (.*?)"/)
+                if (match) reason = match[1]
+             }
+             throw new Error(`A transação falharia: ${reason}`)
+         }
+         
+         // Se staticCall passou mas estimateGas falhou, é estranho, mas seguimos com aviso
+         console.warn("Simulação passou, mas estimativa falhou. Tentando enviar com limite alto...")
       }
       
       console.log("Usando Gas Limit:", finalGasLimit.toString())
@@ -1340,6 +1357,11 @@ export default function Dashboard() {
 
          // Override gas limit with our calculated safe value
          populatedTx.gasLimit = finalGasLimit
+         
+         // Explicitly set 'from' if missing (though signer handles it)
+         if (!populatedTx.from) {
+             populatedTx.from = signerAddress
+         }
 
          const tx = await signer.sendTransaction(populatedTx)
          
