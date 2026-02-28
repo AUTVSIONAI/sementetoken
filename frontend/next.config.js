@@ -3,6 +3,7 @@ const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   async rewrites() {
+    console.log('API_URL from environment:', process.env.API_URL);
     return [
       {
         source: "/api/:path*",
