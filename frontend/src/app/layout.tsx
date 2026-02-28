@@ -19,7 +19,15 @@ export const metadata: Metadata = {
         url: "/logo/logo.jpeg",
         width: 1200,
         height: 630,
-        alt: "SementeToken Logo"
+        alt: "SementeToken Logo",
+        type: "image/jpeg"
+      },
+      {
+        url: "/logo/sementetoken-256.png",
+        width: 256,
+        height: 256,
+        alt: "SementeToken Icon",
+        type: "image/png"
       }
     ],
     locale: "pt_BR",
@@ -27,8 +35,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SementeToken",
-    description: "Plataforma de Reflorestamento e Tokenização ESG",
+    title: "SementeToken - Reflorestamento e Tokenização ESG",
+    description: "Plataforma de Reflorestamento e Tokenização ESG. Transforme cada token em uma árvore real e acompanhe seu impacto ambiental.",
     images: ["/logo/logo.jpeg"]
   },
   icons: {
