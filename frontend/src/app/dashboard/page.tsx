@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.6-AUTO-APPROVE")
+    console.log("APP VERSION: v3.1.7-AUTO-DETECT-ARG")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1315,49 +1315,74 @@ export default function Dashboard() {
       console.log("Method: plantTree(uint256)")
       console.log("Argument (Wei):", value.toString())
 
+      let valueToSend = value;
+      const amountInt = BigInt(parseInt(amount)); // Assumes integer trees
+
       // Tentar estimar gás primeiro para ver se detectamos erro antes de enviar
       let finalGasLimit = BigInt(6000000) // Fallback seguro alto
       
       try {
          // Ethers v6 syntax: contract.method.estimateGas(args)
-         const estimated = await treeContract.plantTree.estimateGas(value)
-         console.log("Gas estimado:", estimated.toString())
+         const estimated = await treeContract.plantTree.estimateGas(valueToSend)
+         console.log("Gas estimado (Wei):", estimated.toString())
          // Adicionar margem de segurança de 20%
          finalGasLimit = (estimated * BigInt(120)) / BigInt(100)
       } catch (gasError: any) {
-         console.warn("Falha ao estimar gás (possível erro na transação):", gasError.message)
+         console.warn("Falha ao estimar gás com Wei:", gasError.message)
          
-         // Se a estimativa falhou, TENTE simular a chamada para pegar o motivo do erro
+         // TENTATIVA 2: Tentar enviar como número inteiro (quantidade de árvores)
          try {
-             await treeContract.plantTree.staticCall(value)
-         } catch (staticError: any) {
-             console.error("Simulação de transação falhou com erro:", staticError)
-             // Lança erro claro para o usuário e ABORTA
-             let reason = staticError.reason || staticError.message || "Motivo desconhecido"
-             if (reason.includes("execution reverted")) {
-                // Tenta limpar a mensagem se for muito longa
-                const match = reason.match(/execution reverted: (.*?)"/)
-                if (match) reason = match[1]
+             console.log("Tentando estimar gás com Quantidade Inteira:", amountInt.toString())
+             const estimatedInt = await treeContract.plantTree.estimateGas(amountInt)
+             console.log("Gas estimado (Int):", estimatedInt.toString())
+             finalGasLimit = (estimatedInt * BigInt(120)) / BigInt(100)
+             valueToSend = amountInt; // SUCESSO: Contrato espera número de árvores
+             console.log("TROCA DE ESTRATÉGIA: Enviando Inteiro em vez de Wei.")
+         } catch (gasErrorInt: any) {
+             console.warn("Falha ao estimar gás com Int:", gasErrorInt.message)
+
+             // DIAGNÓSTICO: Se a estimativa falhou, TENTE simular a chamada para pegar o motivo do erro
+             // Primeiro com Wei
+             try {
+                 await treeContract.plantTree.staticCall(value)
+             } catch (staticError: any) {
+                 console.warn("Simulação (Wei) falhou:", staticError.reason || staticError.message)
+                 
+                 // Se falhou com Wei, tenta simular com Int para ver se é esse o problema
+                 try {
+                    await treeContract.plantTree.staticCall(amountInt)
+                    // Se passar aqui, é porque Int é o correto, mas estimateGas falhou por outro motivo (ex: transiente)
+                    valueToSend = amountInt
+                    console.log("Simulação (Int) passou! Usando Int para a transação.")
+                 } catch (staticErrorInt: any) {
+                     console.error("Simulação (Int) também falhou:", staticErrorInt)
+                     
+                     // Lança o erro original (Wei) ou o erro Int, dependendo do que pareceu mais "perto"
+                     // Geralmente o erro original é o mais relevante se ambos falham.
+                     let reason = staticError.reason || staticError.message || "Motivo desconhecido"
+                     if (reason.includes("execution reverted")) {
+                        const match = reason.match(/execution reverted: (.*?)"/)
+                        if (match) reason = match[1]
+                     }
+                     throw new Error(`A transação falharia: ${reason}`)
+                 }
              }
-             throw new Error(`A transação falharia: ${reason}`)
          }
-         
-         // Se staticCall passou mas estimateGas falhou, é estranho, mas seguimos com aviso
-         console.warn("Simulação passou, mas estimativa falhou. Tentando enviar com limite alto...")
       }
       
       console.log("Usando Gas Limit:", finalGasLimit.toString())
+      console.log("Usando Valor (Arg):", valueToSend.toString())
 
       try {
          // Use populateTransaction to get the correct transaction request object
          // This ensures that all fields (to, data, gasLimit) are correctly formatted for the signer
-         const populatedTx = await treeContract.plantTree.populateTransaction(value)
+         const populatedTx = await treeContract.plantTree.populateTransaction(valueToSend)
          console.log("Populated Tx Request:", populatedTx)
 
          // Double check if data is present
          if (!populatedTx.data || populatedTx.data === "0x") {
             console.warn("Populate returned empty data, trying manual encoding...")
-            populatedTx.data = treeContract.interface.encodeFunctionData("plantTree", [value])
+            populatedTx.data = treeContract.interface.encodeFunctionData("plantTree", [valueToSend])
          }
          
          if (!populatedTx.data || populatedTx.data === "0x") {
