@@ -1302,7 +1302,7 @@ export default function Dashboard() {
          const estimated = await treeContract.plantTree.estimateGas(value)
          console.log("Gas estimado:", estimated.toString())
          // Adicionar margem de segurança de 20%
-         finalGasLimit = (estimated * 120n) / 100n
+         finalGasLimit = (estimated * BigInt(120)) / BigInt(100)
       } catch (gasError: any) {
          console.warn("Falha ao estimar gás (possível erro na transação):", gasError.message)
          // Mantemos o fallback de 6M, mas avisamos no console
