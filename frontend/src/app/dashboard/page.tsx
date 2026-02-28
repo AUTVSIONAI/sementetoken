@@ -398,6 +398,12 @@ export default function Dashboard() {
       }
       const profile = await resProfile.json()
       
+      if (!profile || !profile.id) {
+        console.error("Profile ID missing:", profile)
+        alert("Erro: Não foi possível identificar o usuário para gerar o relatório.")
+        return
+      }
+
       const res = await fetch(`${API_URL}/esg/report/${profile.id}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -1246,6 +1252,7 @@ export default function Dashboard() {
       console.log("3. Tree Contract Address (Destino):", TREE_ADDRESS)
       console.log("4. Token Contract Address (Origem):", SEME_ADDRESS)
       console.log("5. Signer Address (Quem planta):", signerAddress)
+      console.log("6. ABI Definition:", treeContract.interface.fragments.map(f => f.format()).join(", "))
 
       // Check Balance
       const balance = await tokenContract.balanceOf(signerAddress)
@@ -1293,7 +1300,11 @@ export default function Dashboard() {
       }
 
       console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
-      
+      console.log("--- TRANSACTION PREP ---")
+      console.log("Target Contract:", await treeContract.getAddress())
+      console.log("Method: plantTree(uint256)")
+      console.log("Argument (Wei):", value.toString())
+
       // Tentar estimar gás primeiro para ver se detectamos erro antes de enviar
       let finalGasLimit = BigInt(6000000) // Fallback seguro alto
       
