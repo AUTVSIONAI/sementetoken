@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.5-DEBUG-STATIC-CALL")
+    console.log("APP VERSION: v3.1.6-AUTO-APPROVE")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1264,6 +1264,26 @@ export default function Dashboard() {
          throw new Error(msg)
       }
 
+      // Check Allowance
+      const currentAllowance = await tokenContract.allowance(signerAddress, TREE_ADDRESS)
+      console.log("7. Current Allowance (Wei):", currentAllowance.toString())
+
+      if (currentAllowance < value) {
+        // Tenta aprovar automaticamente se não tiver allowance suficiente
+        console.log("Allowance insuficiente. Tentando aprovar automaticamente...")
+        try {
+            const approveTx = await tokenContract.approve(TREE_ADDRESS, value)
+            console.log("Approve Tx enviada:", approveTx.hash)
+            setSemeActionMessage("Aprovando uso do token SEME...")
+            await approveTx.wait()
+            console.log("Approve Tx confirmada.")
+        } catch (approveError: any) {
+            console.error("Falha na aprovação automática:", approveError)
+            const msg = `Aprovação insuficiente e falha ao tentar aprovar. Por favor, aprove manualmente.`
+            throw new Error(msg)
+        }
+      }
+
       // Check Contract Paused
       try {
         const isPaused = await treeContract.paused()
@@ -1283,21 +1303,10 @@ export default function Dashboard() {
         if (value < price) {
             const msg = `Valor insuficiente para plantar 1 árvore. O preço mínimo é ${formatUnits(price, 18)} SEME.`
             console.error(msg)
-            // Não bloqueamos aqui hard, mas avisamos no console. 
-            // Se a lógica do contrato for diferente, o erro real virá da transação.
+            throw new Error(msg)
         }
       } catch (err: any) {
         console.warn("Could not check planting price:", err.message)
-      }
-
-      // Check Allowance
-      const currentAllowance = await tokenContract.allowance(signerAddress, TREE_ADDRESS)
-      console.log("7. Current Allowance (Wei):", currentAllowance.toString())
-
-      if (currentAllowance < value) {
-        const msg = `Aprovação insuficiente. Atual: ${formatUnits(currentAllowance, 18)} SEME, Necessário: ${amount} SEME. Por favor, clique em "Aprovar SEME" primeiro e aguarde a confirmação.`
-        console.error(msg)
-        throw new Error(msg)
       }
 
       console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
