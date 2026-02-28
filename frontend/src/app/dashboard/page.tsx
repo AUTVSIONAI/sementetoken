@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.7-AUTO-DETECT-ARG")
+    console.log("APP VERSION: v3.1.8-CLEAN-LOGS")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -1284,7 +1284,7 @@ export default function Dashboard() {
         }
       }
 
-      // Check Contract Paused
+      // Check Contract Paused (Opcional - Silencioso se falhar)
       try {
         const isPaused = await treeContract.paused()
         console.log("6.1. Is Contract Paused:", isPaused)
@@ -1292,11 +1292,11 @@ export default function Dashboard() {
            throw new Error("O contrato de plantio está pausado temporariamente.")
         }
       } catch (err: any) {
-        // Se a função não existir ou der erro, loga mas segue (pode ser contrato antigo sem essa função)
-        console.warn("Could not check paused status:", err.message)
+        // Apenas log informativo, pois o contrato pode não ter essa função
+        console.log("Check paused status skipped (not supported by contract).")
       }
 
-      // Check Planting Price
+      // Check Planting Price (Opcional - Silencioso se falhar)
       try {
         const price = await treeContract.plantingPrice()
         console.log("6.2. Planting Price (Wei):", price.toString())
@@ -1306,7 +1306,7 @@ export default function Dashboard() {
             throw new Error(msg)
         }
       } catch (err: any) {
-        console.warn("Could not check planting price:", err.message)
+        console.log("Check planting price skipped (not supported by contract).")
       }
 
       console.log("8. Fluxo: Balance OK -> Allowance OK -> Chamando plantTree...")
@@ -1328,7 +1328,7 @@ export default function Dashboard() {
          // Adicionar margem de segurança de 20%
          finalGasLimit = (estimated * BigInt(120)) / BigInt(100)
       } catch (gasError: any) {
-         console.warn("Falha ao estimar gás com Wei:", gasError.message)
+         console.log("Estimativa com Wei não suportada, tentando método alternativo (Int)...")
          
          // TENTATIVA 2: Tentar enviar como número inteiro (quantidade de árvores)
          try {
@@ -1339,14 +1339,14 @@ export default function Dashboard() {
              valueToSend = amountInt; // SUCESSO: Contrato espera número de árvores
              console.log("TROCA DE ESTRATÉGIA: Enviando Inteiro em vez de Wei.")
          } catch (gasErrorInt: any) {
-             console.warn("Falha ao estimar gás com Int:", gasErrorInt.message)
+             console.log("Falha na estimativa (Int):", gasErrorInt.message)
 
              // DIAGNÓSTICO: Se a estimativa falhou, TENTE simular a chamada para pegar o motivo do erro
              // Primeiro com Wei
              try {
                  await treeContract.plantTree.staticCall(value)
              } catch (staticError: any) {
-                 console.warn("Simulação (Wei) falhou:", staticError.reason || staticError.message)
+                 // Silencioso se falhar, tenta o próximo
                  
                  // Se falhou com Wei, tenta simular com Int para ver se é esse o problema
                  try {
@@ -1355,8 +1355,6 @@ export default function Dashboard() {
                     valueToSend = amountInt
                     console.log("Simulação (Int) passou! Usando Int para a transação.")
                  } catch (staticErrorInt: any) {
-                     console.error("Simulação (Int) também falhou:", staticErrorInt)
-                     
                      // Lança o erro original (Wei) ou o erro Int, dependendo do que pareceu mais "perto"
                      // Geralmente o erro original é o mais relevante se ambos falham.
                      let reason = staticError.reason || staticError.message || "Motivo desconhecido"
