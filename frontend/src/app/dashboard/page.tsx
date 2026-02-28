@@ -617,6 +617,7 @@ export default function Dashboard() {
       return
     }
 
+    console.log("APP VERSION: v3.1.2-FIX-TX-ENCODING-ES2020")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
