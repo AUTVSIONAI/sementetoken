@@ -1,9 +1,13 @@
 import { Injectable } from "@nestjs/common"
 import { InjectRepository } from "@nestjs/typeorm"
-import { Repository } from "typeorm"
+import { In, Repository } from "typeorm"
 import { Order } from "./order.entity"
 import { OrderItem } from "./order-item.entity"
 import { Product } from "../products/product.entity"
+import { Tree, TreeStatus } from "../trees/tree.entity"
+import { Token } from "../tokens/token.entity"
+import { GreenTokenService } from "../green-token/green-token.service"
+import { WalletService } from "../wallet/wallet.service"
 
 type CreateOrderItemInput = {
   productId: string
@@ -18,7 +22,13 @@ export class OrdersService {
     @InjectRepository(OrderItem)
     private readonly orderItemsRepository: Repository<OrderItem>,
     @InjectRepository(Product)
-    private readonly productsRepository: Repository<Product>
+    private readonly productsRepository: Repository<Product>,
+    @InjectRepository(Tree)
+    private readonly treesRepository: Repository<Tree>,
+    @InjectRepository(Token)
+    private readonly tokensRepository: Repository<Token>,
+    private readonly greenTokenService: GreenTokenService,
+    private readonly walletService: WalletService
   ) {}
 
   async createForUser(
@@ -36,7 +46,11 @@ export class OrdersService {
     }
 
     const productIds = items.map((i) => i.productId)
-    const products = await this.productsRepository.findByIds(productIds)
+    // Usar find com relations para garantir acesso ao projeto
+    const products = await this.productsRepository.find({
+      where: { id: In(productIds) },
+      relations: ["project"]
+    })
 
     if (!products.length) {
       throw new Error("Produtos não encontrados")
@@ -55,6 +69,23 @@ export class OrdersService {
       totalCarbonCashbackKg += (product.carbonCashbackKg || 0) * qty
     }
 
+    // 1. Verificar saldo de Green Tokens
+    const wallet = await this.walletService.getOrCreateWallet(userId)
+    if ((wallet.greenBalance || 0) < totalAmount) {
+      throw new Error(
+        `Saldo insuficiente de Green Tokens. Necessário: ${totalAmount}, Atual: ${wallet.greenBalance || 0}`
+      )
+    }
+
+    // 2. Debitar saldo (Transação de gasto)
+    await this.greenTokenService.addTransaction(
+      userId,
+      totalAmount,
+      "spend",
+      "purchase"
+    )
+
+    // 3. Criar Pedido
     const order = this.ordersRepository.create({
       user: { id: userId } as any,
       totalAmount,
@@ -62,6 +93,9 @@ export class OrdersService {
     })
 
     const savedOrder = await this.ordersRepository.save(order)
+
+    // 4. Processar Itens (Criar OrderItems e Árvores/Tokens)
+    let generatedTokensCount = 0
 
     for (const item of items) {
       const product = products.find((p) => p.id === item.productId)
@@ -78,35 +112,38 @@ export class OrdersService {
         carbonCashbackKg: (product.carbonCashbackKg || 0) * qty
       })
       await this.orderItemsRepository.save(orderItem)
+
+      // Criar Árvores e Tokens (1 para cada unidade comprada)
+      for (let i = 0; i < qty; i++) {
+        // Criar Árvore
+        const tree = this.treesRepository.create({
+          species: product.name, // Nome do produto como espécie/tipo
+          project: product.project ? ({ id: product.project.id } as any) : null,
+          imageUrl: product.imageUrl,
+          plantedAt: new Date(),
+          status: TreeStatus.PENDING,
+          growthStage: "seed",
+          estimatedCo2Total: product.carbonCashbackKg || 0
+        })
+        const savedTree = await this.treesRepository.save(tree)
+
+        // Criar Token (Semente Token / Propriedade)
+        const token = this.tokensRepository.create({
+          user: { id: userId } as any,
+          tree: savedTree,
+          amount: 1 // 1 Árvore = 1 Token
+        })
+        await this.tokensRepository.save(token)
+        generatedTokensCount++
+      }
     }
 
-    try {
-      // Inserção direta de tokens para cashback
-      // Nota: tree_id é NULL pois é um token gerado por compra, não plantio direto
-      const tokensResult = await this.ordersRepository.query(
-        "INSERT INTO tokens (user_id, tree_id, amount) VALUES ($1, NULL, $2) RETURNING id",
-        [userId, totalCarbonCashbackKg]
-      )
-
-      const generatedTokens = tokensResult?.length || 0
-
-      return {
-        orderId: savedOrder.id,
-        totalAmount,
-        totalCarbonCashbackKg,
-        createdAt: savedOrder.createdAt.toISOString(),
-        generatedTokens
-      }
-    } catch (error) {
-      console.error("Erro ao gerar tokens de cashback:", error)
-      // Não falhar o pedido se o token falhar, mas logar erro
-      return {
-        orderId: savedOrder.id,
-        totalAmount,
-        totalCarbonCashbackKg,
-        createdAt: savedOrder.createdAt.toISOString(),
-        generatedTokens: 0
-      }
+    return {
+      orderId: savedOrder.id,
+      totalAmount,
+      totalCarbonCashbackKg,
+      createdAt: savedOrder.createdAt.toISOString(),
+      generatedTokens: generatedTokensCount
     }
   }
 }

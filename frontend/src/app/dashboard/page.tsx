@@ -617,7 +617,7 @@ export default function Dashboard() {
       return
     }
 
-    console.log("APP VERSION: v3.1.8-CLEAN-LOGS")
+    console.log("APP VERSION: v3.1.9 (Store Fix)")
     async function loadSummary(currentToken: string) {
       try {
         const res = await fetch(`${API_URL}/dashboard/summary`, {
@@ -2134,7 +2134,7 @@ export default function Dashboard() {
           <p className="mt-1 font-semibold text-sm text-emerald-50">
             Painel do usuário
           </p>
-          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.3</p>
+          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.9 (Store Fix)</p>
         </div>
         <nav className="flex-1 space-y-1 text-sm">
           <button
