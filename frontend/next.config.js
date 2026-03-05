@@ -5,7 +5,6 @@ const nextConfig = {
     return 'build-' + Date.now();
   },
   reactStrictMode: true,
-  transpilePackages: ['react-map-gl', 'mapbox-gl'],
   images: {
     remotePatterns: [
       {
