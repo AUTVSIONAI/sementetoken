@@ -6,6 +6,7 @@ import { OrderItem } from "./order-item.entity"
 import { Product } from "../products/product.entity"
 import { Tree, TreeStatus } from "../trees/tree.entity"
 import { Token } from "../tokens/token.entity"
+import { Species } from "../species/species.entity"
 import { GreenTokenService } from "../green-token/green-token.service"
 import { WalletService } from "../wallet/wallet.service"
 
@@ -29,6 +30,8 @@ export class OrdersService {
     private readonly treesRepository: Repository<Tree>,
     @InjectRepository(Token)
     private readonly tokensRepository: Repository<Token>,
+    @InjectRepository(Species)
+    private readonly speciesRepository: Repository<Species>,
     private readonly greenTokenService: GreenTokenService,
     private readonly walletService: WalletService
   ) {}
@@ -73,7 +76,10 @@ export class OrdersService {
       }
 
       // 1. Verificar saldo de Green Tokens
+      this.logger.log(`Verificando saldo para usuário ${userId}, totalAmount: ${totalAmount}`)
       const wallet = await this.walletService.getOrCreateWallet(userId)
+      this.logger.log(`Saldo atual: ${wallet.greenBalance}`)
+      
       if ((wallet.greenBalance || 0) < totalAmount) {
         throw new BadRequestException(
           `Saldo insuficiente de Green Tokens. Necessário: ${totalAmount}, Atual: ${wallet.greenBalance || 0}`
@@ -81,6 +87,7 @@ export class OrdersService {
       }
 
       // 2. Debitar saldo (Transação de gasto)
+      this.logger.log(`Debitando saldo do usuário ${userId}`)
       await this.greenTokenService.addTransaction(
         userId,
         totalAmount,
@@ -89,6 +96,7 @@ export class OrdersService {
       )
 
       // 3. Criar Pedido
+      this.logger.log(`Criando pedido...`)
       const order = this.ordersRepository.create({
         user: { id: userId } as any,
         totalAmount,
@@ -96,6 +104,7 @@ export class OrdersService {
       })
 
       const savedOrder = await this.ordersRepository.save(order)
+      this.logger.log(`Pedido salvo: ${savedOrder.id}`)
 
       // 4. Processar Itens (Criar OrderItems e Árvores/Tokens)
       let generatedTokensCount = 0
@@ -118,15 +127,37 @@ export class OrdersService {
 
         // Criar Árvores e Tokens (1 para cada unidade comprada)
         for (let i = 0; i < qty; i++) {
+          // Tentar encontrar a espécie correspondente ao nome do produto
+          // Isso garante que usaremos a imagem oficial do catálogo (Wikipedia) se disponível
+          let speciesEntity: Species | null = null
+          let treeImageUrl = product.imageUrl
+
+          try {
+            // Tenta encontrar por nome exato ou contido no nome do produto
+            // Ex: "Muda de Ipê Amarelo" -> procura "Ipê Amarelo"
+            const allSpecies = await this.speciesRepository.find()
+            speciesEntity = allSpecies.find(s => 
+              product.name.toLowerCase().includes(s.commonName.toLowerCase()) ||
+              s.commonName.toLowerCase().includes(product.name.toLowerCase())
+            )
+
+            if (speciesEntity) {
+              treeImageUrl = speciesEntity.imageUrl || treeImageUrl
+            }
+          } catch (err) {
+            this.logger.warn(`Erro ao buscar espécie para produto ${product.name}: ${err.message}`)
+          }
+
           // Criar Árvore
           const tree = this.treesRepository.create({
-            species: product.name, // Nome do produto como espécie/tipo
+            species: speciesEntity ? speciesEntity.commonName : product.name,
+            speciesType: speciesEntity ? { id: speciesEntity.id } : null,
             project: product.project ? ({ id: product.project.id } as any) : null,
-            imageUrl: product.imageUrl,
+            imageUrl: treeImageUrl,
             plantedAt: new Date(),
             status: TreeStatus.PENDING,
             growthStage: "seed",
-            estimatedCo2Total: product.carbonCashbackKg || 0
+            estimatedCo2Total: speciesEntity?.carbonEstimation || product.carbonCashbackKg || 0
           })
           const savedTree = await this.treesRepository.save(tree)
 

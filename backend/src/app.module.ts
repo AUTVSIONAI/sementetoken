@@ -46,7 +46,7 @@ import { TokenomicsModule } from "./tokenomics/tokenomics.module"
       dropSchema: false,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, "..", "uploads"),
+      rootPath: join(process.cwd(), "uploads"),
       serveRoot: "/uploads",
     }),
     UsersModule,

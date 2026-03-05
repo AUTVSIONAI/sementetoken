@@ -618,7 +618,7 @@ export default function Dashboard() {
     }
 
     console.log(
-      "%cAPP VERSION: v3.1.9-FINAL (STORE FIX CONFIRMED)",
+      "%cAPP VERSION: v3.2.0-MAPBOX (STORE FIX CONFIRMED)",
       "background: #ff0000; color: #ffffff; font-size: 20px; font-weight: bold; padding: 10px;"
     )
     async function loadSummary(currentToken: string) {

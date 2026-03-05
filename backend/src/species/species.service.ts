@@ -13,56 +13,6 @@ type ExternalSpecies = {
   biome?: string
   imageUrl?: string
   description?: string
-  async seedOfficialSpecies(): Promise<{ created: number; skipped: number; errors: number }> {
-    let created = 0
-    let skipped = 0
-    let errors = 0
-
-    this.logger.log(`Starting official catalog seed with ${OFFICIAL_SPECIES.length} species...`)
-
-    for (const speciesData of OFFICIAL_SPECIES) {
-      try {
-        const existing = await this.speciesRepository.findOne({
-          where: [
-            { scientificName: speciesData.scientificName },
-            { commonName: speciesData.commonName }
-          ]
-        })
-
-        if (existing) {
-          skipped++
-          continue
-        }
-
-        // Fetch from Wikipedia
-        const wikiData = await this.wikipediaService.fetchSpeciesData(speciesData.scientificName)
-        
-        const newSpecies = this.speciesRepository.create({
-          commonName: speciesData.commonName,
-          scientificName: speciesData.scientificName,
-          biome: speciesData.biome,
-          description: wikiData?.description || `Espécie nativa do bioma ${speciesData.biome}`,
-          imageUrl: wikiData?.imageUrl || null,
-          carbonEstimation: speciesData.estimatedCo2,
-          baseCost: 50, // Default values
-          salePrice: 100
-        })
-
-        await this.speciesRepository.save(newSpecies)
-        created++
-        
-        // Small delay to be nice to Wikipedia API
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-      } catch (error) {
-        this.logger.error(`Failed to seed species ${speciesData.commonName}: ${error.message}`)
-        errors++
-      }
-    }
-
-    this.logger.log(`Seed completed. Created: ${created}, Skipped: ${skipped}, Errors: ${errors}`)
-    return { created, skipped, errors }
-  }
 }
 
 @Injectable()
@@ -274,59 +224,63 @@ export class SpeciesService {
   }
 
   async seedOfficialSpecies(): Promise<{ created: number; skipped: number; errors: number }> {
-    let created = 0;
-    let skipped = 0;
-    let errors = 0;
+    let created = 0
+    let skipped = 0
+    let errors = 0
+
+    this.logger.log(`Starting official catalog seed with ${OFFICIAL_SPECIES.length} species...`)
 
     for (const speciesData of OFFICIAL_SPECIES) {
       try {
-        // Check if species already exists by scientific name or slug
+        const slug = speciesData.commonName.toLowerCase().replace(/ /g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        
         const existing = await this.speciesRepository.findOne({
           where: [
             { scientificName: speciesData.scientificName },
-            { slug: speciesData.slug }
+            { slug: slug }
           ]
-        });
+        })
 
         if (existing) {
-          skipped++;
-          continue;
+          skipped++
+          continue
         }
 
-        // Fetch data from Wikipedia
-        let wikiData = null;
-        if (speciesData.scientificName) {
-            wikiData = await this.wikipediaService.fetchSpeciesData(speciesData.scientificName);
-        }
+        // Fetch from Wikipedia
+        const wikiData = await this.wikipediaService.fetchSpeciesData(speciesData.scientificName)
         
-        // Fallback description
-        const description = wikiData?.extract || "Espécie nativa do bioma brasileiro utilizada em projetos de reflorestamento e compensação de carbono.";
-        const imageUrl = wikiData?.thumbnailUrl;
+        // Use existing fetch logic or fallback
+        const description = wikiData?.description || `Espécie nativa do bioma ${speciesData.biome}, ideal para reflorestamento e captura de carbono.`
+        const imageUrl = wikiData?.imageUrl || null
 
         const newSpecies = this.speciesRepository.create({
           commonName: speciesData.commonName,
           scientificName: speciesData.scientificName,
           biome: speciesData.biome,
-          slug: speciesData.slug,
-          baseCost: 100, // Default base price
-          salePrice: 150, // Default sale price
+          slug: slug,
+          baseCost: 50, // Default values
+          salePrice: 100,
           carbonEstimation: speciesData.estimatedCo2,
           description: description,
           imageUrl: imageUrl,
           isOfficial: true,
           status: "ACTIVE"
-        });
+        })
 
-        await this.speciesRepository.save(newSpecies);
-        created++;
-        this.logger.log(`Seeded official species: ${speciesData.commonName}`);
+        await this.speciesRepository.save(newSpecies)
+        created++
+        this.logger.log(`Seeded official species: ${speciesData.commonName}`)
+        
+        // Small delay to be nice to Wikipedia API
+        await new Promise(resolve => setTimeout(resolve, 500))
 
       } catch (error) {
-        this.logger.error(`Error seeding species ${speciesData.commonName}: ${error.message}`);
-        errors++;
+        this.logger.error(`Failed to seed species ${speciesData.commonName}: ${error.message}`)
+        errors++
       }
     }
 
-    return { created, skipped, errors };
+    this.logger.log(`Seed completed. Created: ${created}, Skipped: ${skipped}, Errors: ${errors}`)
+    return { created, skipped, errors }
   }
 }

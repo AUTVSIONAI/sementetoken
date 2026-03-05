@@ -5,6 +5,20 @@ const nextConfig = {
     return 'build-' + Date.now();
   },
   reactStrictMode: true,
+  transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
+    unoptimized: true, // Em produção com standalone e docker, às vezes image optimization falha sem configuração extra
+  },
   async rewrites() {
     console.log('API_URL from environment:', process.env.API_URL);
     return [

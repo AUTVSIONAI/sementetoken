@@ -18,10 +18,10 @@ export class Wallet {
   @JoinColumn({ name: "user_id" })
   user: User
 
-  @Column({ name: "green_balance", type: "int", default: 0 })
+  @Column({ name: "green_balance", type: "float", default: 0 })
   greenBalance: number
 
-  @Column({ name: "seed_balance", type: "int", default: 0 })
+  @Column({ name: "seed_balance", type: "float", default: 0 })
   seedBalance: number
 
   @CreateDateColumn({ name: "created_at" })

@@ -1,6 +1,6 @@
 {
   "name": "sementetoken-frontend",
-  "version": "3.1.9",
+  "version": "3.2.0-MAPBOX",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",

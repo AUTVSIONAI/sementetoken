@@ -17,7 +17,7 @@ export class GreenTransaction {
   @JoinColumn({ name: "user_id" })
   user: User
 
-  @Column({ type: "int" })
+  @Column({ type: "float" })
   amount: number
 
   @Column({ type: "varchar", length: 20 })
