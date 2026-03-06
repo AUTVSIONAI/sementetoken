@@ -451,28 +451,39 @@ export default function AdminPage() {
     setSuccess("")
     try {
       const token = localStorage.getItem("accessToken")
-      if (!token) return
+      if (!token) {
+        alert("Sessão expirada. Faça login novamente.")
+        return
+      }
+
+      console.log("Iniciando seed oficial em:", `${API_URL}/species/seed-official`)
 
       const res = await fetch(`${API_URL}/species/seed-official`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         }
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || "Erro ao semear catálogo oficial")
+        const data = await res.json().catch(() => ({}))
+        console.error("Erro no seed:", data)
+        throw new Error(data.message || `Erro ${res.status}: ${res.statusText}`)
       }
 
       const result = await res.json()
-      setSuccess(
-        `Catálogo oficial processado! Criados: ${result.created}, Pulados: ${result.skipped}, Erros: ${result.errors}`
-      )
+      console.log("Seed sucesso:", result)
+      const msg = `Catálogo oficial processado! Criados: ${result.created}, Pulados: ${result.skipped}, Erros: ${result.errors}`
+      setSuccess(msg)
+      alert(msg)
+      
       // Opcional: recarregar a lista se necessário
       fetchExternalSpecies()
     } catch (err: any) {
+      console.error("Erro no catch do seed:", err)
       setError(err.message)
+      alert(`Erro ao carregar catálogo: ${err.message}`)
     } finally {
       setSeedingOfficial(false)
     }
