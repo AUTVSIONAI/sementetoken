@@ -29,6 +29,7 @@ export class AiService {
       })
 
       const data = response.data
+      this.logger.debug(`Resposta recebida do AI Service: ${JSON.stringify(data)}`)
 
       return {
         treeId: data.tree_id,

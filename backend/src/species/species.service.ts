@@ -230,55 +230,58 @@ export class SpeciesService {
 
     this.logger.log(`Starting official catalog seed with ${OFFICIAL_SPECIES.length} species...`)
 
-    for (const speciesData of OFFICIAL_SPECIES) {
-      try {
-        const slug = speciesData.commonName.toLowerCase().replace(/ /g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        
-        const existing = await this.speciesRepository.findOne({
-          where: [
-            { scientificName: speciesData.scientificName },
-            { slug: slug },
-            { commonName: speciesData.commonName }
-          ]
+    const chunkSize = 5
+    for (let i = 0; i < OFFICIAL_SPECIES.length; i += chunkSize) {
+      const chunk = OFFICIAL_SPECIES.slice(i, i + chunkSize)
+
+      await Promise.all(
+        chunk.map(async (speciesData) => {
+          try {
+            const slug = speciesData.commonName.toLowerCase().replace(/ /g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            
+            const existing = await this.speciesRepository.findOne({
+              where: [
+                { scientificName: speciesData.scientificName },
+                { slug: slug },
+                { commonName: speciesData.commonName }
+              ]
+            })
+
+            if (existing) {
+              skipped++
+              return
+            }
+
+            // Fetch from Wikipedia
+            const wikiData = await this.wikipediaService.fetchSpeciesData(speciesData.scientificName)
+            
+            // Use existing fetch logic or fallback
+            const description = wikiData?.description || `Espécie nativa do bioma ${speciesData.biome}, ideal para reflorestamento e captura de carbono.`
+            const imageUrl = wikiData?.imageUrl || null
+
+            const newSpecies = this.speciesRepository.create({
+              commonName: speciesData.commonName,
+              scientificName: speciesData.scientificName,
+              biome: speciesData.biome,
+              slug: slug,
+              baseCost: 50, // Default values
+              salePrice: 100,
+              carbonEstimation: speciesData.estimatedCo2,
+              description: description,
+              imageUrl: imageUrl,
+              isOfficial: true,
+              status: "ACTIVE"
+            })
+
+            await this.speciesRepository.save(newSpecies)
+            created++
+            this.logger.log(`Seeded official species: ${speciesData.commonName}`)
+          } catch (error) {
+            this.logger.error(`Failed to seed species ${speciesData.commonName}: ${error.message}`)
+            errors++
+          }
         })
-
-        if (existing) {
-          skipped++
-          continue
-        }
-
-        // Fetch from Wikipedia
-        const wikiData = await this.wikipediaService.fetchSpeciesData(speciesData.scientificName)
-        
-        // Use existing fetch logic or fallback
-        const description = wikiData?.description || `Espécie nativa do bioma ${speciesData.biome}, ideal para reflorestamento e captura de carbono.`
-        const imageUrl = wikiData?.imageUrl || null
-
-        const newSpecies = this.speciesRepository.create({
-          commonName: speciesData.commonName,
-          scientificName: speciesData.scientificName,
-          biome: speciesData.biome,
-          slug: slug,
-          baseCost: 50, // Default values
-          salePrice: 100,
-          carbonEstimation: speciesData.estimatedCo2,
-          description: description,
-          imageUrl: imageUrl,
-          isOfficial: true,
-          status: "ACTIVE"
-        })
-
-        await this.speciesRepository.save(newSpecies)
-        created++
-        this.logger.log(`Seeded official species: ${speciesData.commonName}`)
-        
-        // Small delay to be nice to Wikipedia API
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-      } catch (error) {
-        this.logger.error(`Failed to seed species ${speciesData.commonName}: ${error.message}`)
-        errors++
-      }
+      )
     }
 
     this.logger.log(`Seed completed. Created: ${created}, Skipped: ${skipped}, Errors: ${errors}`)
