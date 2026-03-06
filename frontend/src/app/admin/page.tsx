@@ -578,7 +578,7 @@ export default function AdminPage() {
               ? list
                   .map((a: any) => ({
                     id: a.id,
-                    type: a.type,
+                    type: a.type as "tree" | "feed" | "brigade" | "default" | undefined,
                     description: a.description || undefined,
                     createdAt: a.createdAt ?? a.created_at ?? "",
                     latitude:
