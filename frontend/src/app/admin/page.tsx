@@ -4136,7 +4136,7 @@ export default function AdminPage() {
                               latitude: brigadeActionsMap[0]?.latitude || -14.235,
                               zoom: 6
                             }}
-                            markers={brigadeMapMarkers}
+                            markers={brigadeActionsMap}
                             className="w-full h-full"
                           />
                         </div>
