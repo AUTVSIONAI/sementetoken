@@ -337,7 +337,7 @@ export default function AdminPage() {
     {
       id: string
       type: string
-      description: string | null
+      description?: string
       createdAt: string
       latitude: number
       longitude: number
@@ -579,7 +579,7 @@ export default function AdminPage() {
                   .map((a: any) => ({
                     id: a.id,
                     type: a.type,
-                    description: a.description ?? null,
+                    description: a.description || undefined,
                     createdAt: a.createdAt ?? a.created_at ?? "",
                     latitude:
                       typeof a.latitude === "number" ||
