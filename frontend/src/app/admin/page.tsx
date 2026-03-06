@@ -336,7 +336,7 @@ export default function AdminPage() {
   const [brigadeActionsMap, setBrigadeActionsMap] = useState<
     {
       id: string
-      type: string
+      type?: "tree" | "feed" | "brigade" | "default"
       description?: string
       createdAt: string
       latitude: number
