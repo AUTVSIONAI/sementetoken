@@ -70,6 +70,7 @@ services:
     depends_on:
       - backend
     environment:
+      API_URL: http://backend:3000
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_SEME_ADDRESS: ${SEME_ADDRESS}
       NEXT_PUBLIC_TREE_ADDRESS: ${TREE_ADDRESS}
