@@ -34,6 +34,7 @@ type AdminProduct = {
   carbonCashbackKg: number
   projectId?: string | null
   projectName?: string | null
+  imageUrl?: string | null
 }
 
 type AdminTree = {
@@ -41,6 +42,7 @@ type AdminTree = {
   species: string
   projectName?: string | null
   plantedAt?: string | null
+  imageUrl?: string | null
 }
 
 type Species = {
@@ -868,7 +870,8 @@ export default function AdminPage() {
                 id: t.id,
                 species: t.species,
                 projectName: t.project?.name ?? null,
-                plantedAt: t.plantedAt ?? null
+                plantedAt: t.plantedAt ?? null,
+                imageUrl: t.imageUrl ?? null
               }))
             : []
         )
@@ -924,7 +927,8 @@ export default function AdminPage() {
                 price: p.price ?? 0,
                 carbonCashbackKg: p.carbonCashbackKg ?? 0,
                 projectId: p.project?.id ?? null,
-                projectName: p.project?.name ?? null
+                projectName: p.project?.name ?? null,
+                imageUrl: p.imageUrl ?? null
               }))
             : []
         )
@@ -1191,7 +1195,8 @@ export default function AdminPage() {
                     id: t.id,
                     species: t.species,
                     projectName: t.project?.name ?? null,
-                    plantedAt: t.plantedAt ?? null
+                    plantedAt: t.plantedAt ?? null,
+                    imageUrl: t.imageUrl ?? null
                   }))
                 : []
             )
@@ -1286,7 +1291,8 @@ export default function AdminPage() {
           price: created.price ?? 0,
           carbonCashbackKg: created.carbonCashbackKg ?? 0,
           projectId: created.project?.id ?? null,
-          projectName: created.project?.name ?? null
+          projectName: created.project?.name ?? null,
+          imageUrl: created.imageUrl ?? null
         }
       ])
       setProductForm({
@@ -2014,48 +2020,43 @@ export default function AdminPage() {
 
     const controller = new AbortController()
     const timeout = setTimeout(async () => {
+      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
+      if (!token || !query || query.length < 3) return
+
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
             query
-          )}&limit=5`,
+          )}.json?access_token=${token}&country=br&language=pt&types=address,place,poi,neighborhood&limit=5`,
           {
-            signal: controller.signal,
-            headers: {
-              "Accept-Language": "pt-BR"
-            }
+            signal: controller.signal
           }
         )
-        if (!res.ok) {
-          return
-        }
+        if (!res.ok) return
+
         const data = await res.json()
-        if (!Array.isArray(data)) {
-          return
-        }
-        const mapped = data.map((item: any, index: number) => {
-          const address = item.address || {}
-          const city =
-            address.city || address.town || address.village || undefined
-          const state = address.state || undefined
-          const country = address.country || undefined
-          const street = address.road || undefined
-          const neighborhood =
-            address.suburb || address.neighbourhood || undefined
+        if (!data.features) return
+
+        const mapped = data.features.map((feat: any) => {
+          const context = feat.context || []
+          const findContext = (prefix: string) => 
+            context.find((c: any) => c.id.startsWith(prefix))?.text
+
           return {
-            id: String(item.place_id || index),
-            displayName: item.display_name || "",
-            city,
-            state,
-            country,
-            street,
-            neighborhood,
-            lat: item.lat,
-            lon: item.lon
+            id: feat.id,
+            displayName: feat.place_name,
+            city: findContext('place'),
+            state: findContext('region'),
+            country: findContext('country'),
+            neighborhood: findContext('neighborhood') || (feat.place_type.includes('neighborhood') ? feat.text : undefined),
+            street: feat.place_type.includes('address') ? feat.text : undefined,
+            lat: feat.center[1],
+            lon: feat.center[0]
           }
         })
         setAddressSuggestions(mapped)
-      } catch {
+      } catch (err) {
+        console.error("Erro na busca de endereço Mapbox:", err)
       }
     }, 500)
 
@@ -2295,33 +2296,23 @@ export default function AdminPage() {
                   </select>
                 </div>
                 <div className="h-[600px] w-full rounded-xl overflow-hidden border border-emerald-900/50 relative z-0">
-                  <MapContainer
-                    center={[-14.235, -51.925]}
-                    zoom={4}
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    {estimates.map((est) => (
-                      est.lat && est.lon && (
-                        <CircleMarker
-                          key={est.municipalityIbgeId}
-                          center={[est.lat, est.lon]}
-                          radius={5}
-                          pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.7 }}
-                        >
-                          <Popup>
-                            <strong>{est.municipalityName} - {est.uf}</strong><br/>
-                            Bioma: {est.biome}<br/>
-                            Árvores: {est.treesEstimate.toLocaleString('pt-BR')}<br/>
-                            Tokens ({estimatesTokenizePercent}%): {Math.floor(est.treesEstimate * (estimatesTokenizePercent / 100)).toLocaleString('pt-BR')}
-                          </Popup>
-                        </CircleMarker>
-                      )
-                    ))}
-                  </MapContainer>
+                  <MapboxMap
+                    initialViewState={{
+                      longitude: -51.925,
+                      latitude: -14.235,
+                      zoom: 4
+                    }}
+                    markers={estimates
+                      .filter(est => est.lat && est.lon)
+                      .map(est => ({
+                        id: est.municipalityIbgeId.toString(),
+                        latitude: est.lat!,
+                        longitude: est.lon!,
+                        title: `${est.municipalityName} - ${est.uf}`,
+                        description: `Bioma: ${est.biome} | Árvores: ${est.treesEstimate.toLocaleString('pt-BR')} | Tokens (${estimatesTokenizePercent}%): ${Math.floor(est.treesEstimate * (estimatesTokenizePercent / 100)).toLocaleString('pt-BR')}`,
+                        type: "default"
+                      }))}
+                  />
                 </div>
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full text-left text-sm text-emerald-100/80">
@@ -2816,6 +2807,21 @@ export default function AdminPage() {
                           key={tree.id}
                           className="border-b border-emerald-900/40"
                         >
+                          <td className="py-2">
+                            {tree.imageUrl ? (
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-900">
+                                <img
+                                  src={tree.imageUrl}
+                                  alt={tree.species}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-emerald-900/20 flex items-center justify-center">
+                                <span className="text-emerald-500 text-xs">IMG</span>
+                              </div>
+                            )}
+                          </td>
                           <td className="py-2 text-emerald-50">
                             {tree.species}
                           </td>
@@ -4352,12 +4358,12 @@ export default function AdminPage() {
                             key={product.id}
                             className="border border-emerald-900 rounded-2xl p-3 bg-slate-950/80 flex gap-3"
                           >
-                            {relatedSpecies?.imageUrl ? (
+                            {product.imageUrl || relatedSpecies?.imageUrl ? (
                               <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0">
                                 <img
-                                  src={relatedSpecies.imageUrl}
+                                  src={product.imageUrl || relatedSpecies?.imageUrl}
                                   alt={
-                                    relatedSpecies.commonName || product.name
+                                    product.name || relatedSpecies?.commonName
                                   }
                                   className="w-full h-full object-cover"
                                 />

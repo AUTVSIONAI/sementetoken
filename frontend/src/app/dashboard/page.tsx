@@ -4,24 +4,7 @@ import { useEffect, useState } from "react"
 import { BrowserProvider, Contract, formatUnits, parseUnits } from "ethers"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import dynamic from "next/dynamic"
-
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false }
-)
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false }
-)
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
-  { ssr: false }
-)
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
-  { ssr: false }
-)
+import MapboxMap from "../../components/MapboxMap"
 
 type ChatMessage = {
   role: "user" | "assistant"
@@ -618,7 +601,7 @@ export default function Dashboard() {
     }
 
     console.log(
-      "%cAPP VERSION: v3.2.0-MAPBOX (STORE FIX CONFIRMED)",
+      "%cAPP VERSION: v3.2.1-MAPBOX (DASHBOARD FIX CONFIRMED)",
       "background: #ff0000; color: #ffffff; font-size: 20px; font-weight: bold; padding: 10px;"
     )
     async function loadSummary(currentToken: string) {
@@ -2137,7 +2120,7 @@ export default function Dashboard() {
           <p className="mt-1 font-semibold text-sm text-emerald-50">
             Painel do usuário
           </p>
-          <p className="text-[10px] text-emerald-500/50 mt-1">v3.1.9-FINAL (STORE FIX)</p>
+          <p className="text-[10px] text-emerald-500/50 mt-1">v3.2.1-MAPBOX (DASHBOARD FIX)</p>
         </div>
         <nav className="flex-1 space-y-1 text-sm">
           <button
@@ -5223,44 +5206,22 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="w-full h-56 rounded-xl overflow-hidden border border-emerald-900">
-                      <MapContainer
-                        center={
-                          fireAlerts.length
-                            ? [
-                                fireAlerts[0].latitude,
-                                fireAlerts[0].longitude
-                              ]
-                            : [-14.235, -51.9253]
-                        }
-                        zoom={fireAlerts.length ? 6 : 4}
-                        scrollWheelZoom={false}
+                      <MapboxMap
+                        initialViewState={{
+                          longitude: fireAlerts.length ? fireAlerts[0].longitude : -51.9253,
+                          latitude: fireAlerts.length ? fireAlerts[0].latitude : -14.235,
+                          zoom: fireAlerts.length ? 6 : 4
+                        }}
+                        markers={fireAlerts.map((a) => ({
+                          id: a.id,
+                          longitude: a.longitude,
+                          latitude: a.latitude,
+                          title: "Alerta de fogo",
+                          description: (a.description || "") + " - " + new Date(a.createdAt).toLocaleString("pt-BR"),
+                          type: "brigade"
+                        }))}
                         className="w-full h-full"
-                      >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        {fireAlerts.map((a) => (
-                          <Marker
-                            key={a.id}
-                            position={[a.latitude, a.longitude]}
-                          >
-                            <Popup>
-                              <div className="text-[11px]">
-                                <p className="font-semibold mb-1">
-                                  Alerta de fogo
-                                </p>
-                                {a.description && (
-                                  <p className="mb-1">{a.description}</p>
-                                )}
-                                <p className="text-emerald-200/80">
-                                  {new Date(a.createdAt).toLocaleString("pt-BR")}
-                                </p>
-                              </div>
-                            </Popup>
-                          </Marker>
-                        ))}
-                      </MapContainer>
+                      />
                     </div>
                   </div>
                 )}

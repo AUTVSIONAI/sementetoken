@@ -1,5 +1,6 @@
 # Dependency directories
 node_modules/
+node_modules_bak/
 jspm_packages/
 
 # Next.js build output

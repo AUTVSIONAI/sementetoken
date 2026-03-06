@@ -12,7 +12,8 @@ async function bootstrap() {
 
   app.enableCors()
 
-  app.useStaticAssets(join(__dirname, "..", "uploads"), {
+  // Servir arquivos estáticos da pasta uploads na raiz do projeto
+  app.useStaticAssets(join(process.cwd(), "uploads"), {
     prefix: "/uploads/"
   })
 

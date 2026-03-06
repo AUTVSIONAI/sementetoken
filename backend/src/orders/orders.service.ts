@@ -78,11 +78,12 @@ export class OrdersService {
       // 1. Verificar saldo de Green Tokens
       this.logger.log(`Verificando saldo para usuário ${userId}, totalAmount: ${totalAmount}`)
       const wallet = await this.walletService.getOrCreateWallet(userId)
-      this.logger.log(`Saldo atual: ${wallet.greenBalance}`)
+      const currentBalance = Number(wallet.greenBalance) || 0
+      this.logger.log(`Saldo atual: ${currentBalance}`)
       
-      if ((wallet.greenBalance || 0) < totalAmount) {
+      if (currentBalance < totalAmount) {
         throw new BadRequestException(
-          `Saldo insuficiente de Green Tokens. Necessário: ${totalAmount}, Atual: ${wallet.greenBalance || 0}`
+          `Saldo insuficiente de Green Tokens. Necessário: ${totalAmount}, Atual: ${currentBalance}. Por favor, adquira mais tokens na sua carteira.`
         )
       }
 
@@ -181,7 +182,10 @@ export class OrdersService {
       }
     } catch (error) {
       this.logger.error(`Failed to create order for user ${userId}: ${error.message}`, error.stack);
-      throw error;
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Erro ao processar pedido: ${error.message}`);
     }
   }
 }

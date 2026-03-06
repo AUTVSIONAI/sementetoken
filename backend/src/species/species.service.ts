@@ -237,7 +237,8 @@ export class SpeciesService {
         const existing = await this.speciesRepository.findOne({
           where: [
             { scientificName: speciesData.scientificName },
-            { slug: slug }
+            { slug: slug },
+            { commonName: speciesData.commonName }
           ]
         })
 
