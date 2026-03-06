@@ -22,7 +22,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("SementeToken API")
     .setDescription("API for SementeToken Platform")
-    .setVersion("1.0")
+    .setVersion("1.1.0-FIX-BUILD")
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup("api", app, document)
