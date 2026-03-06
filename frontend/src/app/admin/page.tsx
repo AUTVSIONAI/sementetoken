@@ -446,6 +446,7 @@ export default function AdminPage() {
 
 
   async function handleSeedOfficialSpecies() {
+    console.log("CLIQUE NO BOTAO SEED DETECTADO - Iniciando processo...")
     setSeedingOfficial(true)
     setError("")
     setSuccess("")

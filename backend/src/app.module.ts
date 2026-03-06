@@ -28,6 +28,7 @@ import { ExperienceModule } from "./experience/experience.module"
 import { TourismModule } from "./tourism/tourism.module"
 import { FeaturesModule } from "./features/features.module"
 import { TokenomicsModule } from "./tokenomics/tokenomics.module"
+import { HealthModule } from "./health/health.module"
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { TokenomicsModule } from "./tokenomics/tokenomics.module"
       rootPath: join(process.cwd(), "uploads"),
       serveRoot: "/uploads",
     }),
+    HealthModule,
     UsersModule,
     TreesModule,
     ProjectsModule,

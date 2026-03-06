@@ -74,9 +74,10 @@ export class SpeciesController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   @Post("seed-official")
+  @Roles(UserRole.ADMIN)
   seedOfficial() {
+    console.log("Recebida requisição para Seed Oficial no Controller")
     return this.speciesService.seedOfficialSpecies()
   }
 }
