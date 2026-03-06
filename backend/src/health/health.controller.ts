@@ -6,7 +6,7 @@ export class HealthController {
   getHealth() {
     return {
       status: "ok",
-      version: "3.2.1-FIX-SEED",
+      version: "3.2.2-BUILD-FIXED",
       timestamp: new Date().toISOString(),
       services: {
         database: "connected", // Assumindo conexão se o backend subiu
