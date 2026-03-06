@@ -12,6 +12,8 @@ async function bootstrap() {
 
   app.enableCors()
 
+  app.setGlobalPrefix("api")
+
   // Servir arquivos estáticos da pasta uploads na raiz do projeto
   app.useStaticAssets(join(process.cwd(), "uploads"), {
     prefix: "/uploads/"
