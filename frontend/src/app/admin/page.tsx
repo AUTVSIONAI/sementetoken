@@ -2257,6 +2257,26 @@ export default function AdminPage() {
             APIs
           </button>
           <button
+            className={
+              activeSection === "features"
+                ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50"
+            }
+            onClick={() => setActiveSection("features")}
+          >
+            Features
+          </button>
+          <button
+            className={
+              activeSection === "tourism"
+                ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50"
+            }
+            onClick={() => setActiveSection("tourism")}
+          >
+            Turismo
+          </button>
+          <button
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 mt-4 text-xs flex items-center justify-between text-emerald-50"
             onClick={() => {
               if (typeof window !== "undefined") {

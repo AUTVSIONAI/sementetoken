@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { User } from '../users/user.entity';
 import { TreesService } from '../trees/trees.service';
-import PDFDocument from 'pdfkit';
+import * as PDFDocument from 'pdfkit';
 import { TreeEstimate } from './tree-estimate.entity';
 import * as fs from 'fs';
 import * as path from 'path';

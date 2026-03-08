@@ -592,6 +592,25 @@ export default function Dashboard() {
   }, [guardianTree, storeSpecies, messages])
 
   useEffect(() => {
+    if (!voiceEnabled) {
+      if (typeof window !== "undefined") window.speechSynthesis.cancel()
+      return
+    }
+
+    const lastMessage =
+      chatMode === "forest"
+        ? forestMessages[forestMessages.length - 1]
+        : messages[messages.length - 1]
+
+    if (lastMessage && lastMessage.role === "assistant" && typeof window !== "undefined") {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(lastMessage.content)
+      utterance.lang = "pt-BR"
+      window.speechSynthesis.speak(utterance)
+    }
+  }, [messages, forestMessages, voiceEnabled, chatMode])
+
+  useEffect(() => {
     const token =
       typeof window !== "undefined"
         ? localStorage.getItem("accessToken")
