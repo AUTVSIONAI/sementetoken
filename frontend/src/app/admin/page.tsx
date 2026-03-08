@@ -3333,7 +3333,10 @@ export default function AdminPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={handleSeedOfficialSpecies}
+                        onClick={() => {
+                          console.log("Clicou no botão Seed (Render Check)")
+                          handleSeedOfficialSpecies()
+                        }}
                         disabled={seedingOfficial}
                         className="inline-flex items-center px-3 py-1.5 rounded-full border border-yellow-500/60 text-xs text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-50"
                       >
@@ -4394,7 +4397,7 @@ export default function AdminPage() {
                             {product.imageUrl || relatedSpecies?.imageUrl ? (
                               <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 flex-shrink-0">
                                 <img
-                                  src={product.imageUrl || relatedSpecies?.imageUrl}
+                                  src={getImageUrl(product.imageUrl || relatedSpecies?.imageUrl)}
                                   alt={
                                     product.name || relatedSpecies?.commonName
                                   }

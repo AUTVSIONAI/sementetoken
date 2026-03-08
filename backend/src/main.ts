@@ -14,11 +14,6 @@ async function bootstrap() {
 
   app.setGlobalPrefix("api")
 
-  // Servir arquivos estáticos da pasta uploads na raiz do projeto
-  app.useStaticAssets(join(process.cwd(), "uploads"), {
-    prefix: "/uploads/"
-  })
-
   const config = new DocumentBuilder()
     .setTitle("SementeToken API")
     .setDescription("API for SementeToken Platform")
