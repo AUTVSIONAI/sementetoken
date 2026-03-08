@@ -16,6 +16,14 @@ const MapboxMap = dynamic(() => import("../../components/MapboxMap"), {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api"
 
+function getImageUrl(url: string | undefined | null) {
+  if (!url) return undefined
+  if (url.startsWith("http")) return url
+  if (url.startsWith("/api/")) return url
+  if (url.startsWith("/")) return `/api${url}`
+  return `/api/${url}`
+}
+
 type Project = {
   id: string
   name: string
