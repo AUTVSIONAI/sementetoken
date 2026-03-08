@@ -2328,7 +2328,7 @@ export default function Dashboard() {
                     {stats.nfts}
                   </p>
                   <p className="text-xs text-emerald-200/80 mt-1">
-                    Em breve, seus tokens na Blockchain Waves aparecerão aqui.
+                    Em breve, seus tokens na Blockchain Polygon aparecerão aqui.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-5 rounded-2xl border border-emerald-800">

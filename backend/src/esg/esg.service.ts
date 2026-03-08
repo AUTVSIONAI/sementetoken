@@ -127,56 +127,65 @@ export class EsgService implements OnModuleInit {
   }
 
   async generateReport(companyId: string): Promise<Buffer> {
+    console.log(`Generating ESG report for companyId: ${companyId}`);
     const company = await this.userRepository.findOne({ where: { id: companyId } });
     if (!company) {
+      console.error(`Company/User not found: ${companyId}`);
       throw new NotFoundException('Empresa não encontrada');
     }
 
-    const stats = await this.treesService.getStatsForUser(companyId);
-    const trees = await this.treesService.getTreesForUser(companyId);
-    
-    const doc = new PDFDocument();
-    const buffers: Buffer[] = [];
+    try {
+      console.log('Fetching stats and trees...');
+      const stats = await this.treesService.getStatsForUser(companyId);
+      const trees = await this.treesService.getTreesForUser(companyId);
+      console.log(`Stats found: ${JSON.stringify(stats)}, Trees count: ${trees.length}`);
 
-    doc.on('data', buffers.push.bind(buffers));
-    
-    // Header
-    doc.fontSize(25).text('Relatório ESG - SementeToken', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(16).text(`Empresa: ${company.name}`);
-    doc.text(`Email: ${company.email}`);
-    doc.text(`Data: ${new Date().toLocaleDateString()}`);
-    doc.moveDown();
+      const doc = new PDFDocument();
+      const buffers: Buffer[] = [];
 
-    // Stats
-    doc.fontSize(20).text('Resumo de Impacto', { underline: true });
-    doc.moveDown();
-    doc.fontSize(14).text(`Total de Árvores Plantadas: ${stats.count}`);
-    doc.text(`Compensação de CO2 Estimada: ${stats.co2.toFixed(2)} kg`);
-    doc.moveDown();
+      doc.on('data', buffers.push.bind(buffers));
+      
+      // Header
+      doc.fontSize(25).text('Relatório ESG - SementeToken', { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(16).text(`Empresa: ${company.name}`);
+      doc.text(`Email: ${company.email}`);
+      doc.text(`Data: ${new Date().toLocaleDateString()}`);
+      doc.moveDown();
 
-    // Details
-    doc.fontSize(20).fillColor('black').text('Detalhamento de Ativos (NFTs)', { underline: true });
-    doc.moveDown();
-    
-    if (trees.length > 0) {
-      trees.forEach((tree, index) => {
-        if (doc.y > 700) doc.addPage();
-        doc.fontSize(10).fillColor('black').text(`${index + 1}. ${tree.common_name || 'Árvore'} - ${tree.biome || 'N/A'} (${tree.state || 'N/A'})`);
-        doc.fontSize(8).fillColor('grey').text(`   TxHash: ${tree.tx_hash || 'Pendente'}`);
-        doc.moveDown(0.5);
+      // Stats
+      doc.fontSize(20).text('Resumo de Impacto', { underline: true });
+      doc.moveDown();
+      doc.fontSize(14).text(`Total de Árvores Plantadas: ${stats.count}`);
+      doc.text(`Compensação de CO2 Estimada: ${stats.co2.toFixed(2)} kg`);
+      doc.moveDown();
+
+      // Details
+      doc.fontSize(20).fillColor('black').text('Detalhamento de Ativos (NFTs)', { underline: true });
+      doc.moveDown();
+      
+      if (trees.length > 0) {
+        trees.forEach((tree, index) => {
+          if (doc.y > 700) doc.addPage();
+          doc.fontSize(10).fillColor('black').text(`${index + 1}. ${tree.common_name || 'Árvore'} - ${tree.biome || 'N/A'} (${tree.state || 'N/A'})`);
+          doc.fontSize(8).fillColor('grey').text(`   TxHash: ${tree.tx_hash || 'Pendente'}`);
+          doc.moveDown(0.5);
+        });
+      } else {
+        doc.fontSize(12).fillColor('black').text('Nenhuma árvore encontrada para esta empresa.');
+      }
+      
+      // Footer
+      doc.end();
+
+      return new Promise((resolve) => {
+        doc.on('end', () => {
+          resolve(Buffer.concat(buffers));
+        });
       });
-    } else {
-      doc.fontSize(12).fillColor('black').text('Nenhuma árvore encontrada para esta empresa.');
+    } catch (error) {
+      console.error('Error generating ESG report:', error);
+      throw error;
     }
-    
-    // Footer
-    doc.end();
-
-    return new Promise((resolve) => {
-      doc.on('end', () => {
-        resolve(Buffer.concat(buffers));
-      });
-    });
   }
 }

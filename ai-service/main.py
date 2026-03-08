@@ -71,7 +71,12 @@ def build_openrouter_messages(request: ChatRequest):
 @app.post("/chat")
 def chat_with_tree(request: ChatRequest):
     api_key = os.getenv("OPENROUTER_API_KEY")
+    print(f"DEBUG: Checking API Key. Present: {bool(api_key)}")
+    if api_key:
+        print(f"DEBUG: API Key first 5 chars: {api_key[:5]}...")
+    
     if not api_key:
+        print("DEBUG: API Key missing, using mock response.")
         responses = [
             "Estou me sentindo ótima hoje! O sol está delicioso.",
             "Minhas raízes estão ficando profundas. Sinto a terra úmida.",

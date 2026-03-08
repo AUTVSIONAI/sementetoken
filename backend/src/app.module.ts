@@ -49,6 +49,9 @@ import { HealthModule } from "./health/health.module"
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), "uploads"),
       serveRoot: "/uploads",
+      serveStaticOptions: {
+        index: false,
+      }
     }),
     HealthModule,
     UsersModule,
