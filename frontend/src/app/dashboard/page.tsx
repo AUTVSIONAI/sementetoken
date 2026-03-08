@@ -381,13 +381,14 @@ export default function Dashboard() {
       }
       const profile = await resProfile.json()
       
-      if (!profile || !profile.id) {
+      const userId = profile.id || profile.userId
+      if (!profile || !userId) {
         console.error("Profile ID missing:", profile)
         alert("Erro: Não foi possível identificar o usuário para gerar o relatório.")
         return
       }
 
-      const res = await fetch(`${API_URL}/esg/report/${profile.id}`, {
+      const res = await fetch(`${API_URL}/esg/report/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
