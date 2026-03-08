@@ -77,34 +77,49 @@ export class TreesService {
   }
 
   async getStatsForUser(userId: string): Promise<{ count: number; co2: number }> {
-    const result = await this.treesRepository.query(
-      `SELECT 
-         COUNT(t.id)::int as count, 
-         COALESCE(SUM(t.estimated_co2_total), 0)::float as co2 
-       FROM tokens tok
-       JOIN trees t ON tok.tree_id = t.id
-       WHERE tok.user_id = $1`,
-      [userId]
-    );
-    return {
-      count: result[0]?.count || 0,
-      co2: result[0]?.co2 || 0
-    };
+    console.log(`TreesService.getStatsForUser called for userId: ${userId}`);
+    try {
+      const result = await this.treesRepository.query(
+        `SELECT 
+           COUNT(t.id)::int as count, 
+           COALESCE(SUM(t.estimated_co2_total), 0)::float as co2 
+         FROM tokens tok
+         JOIN trees t ON tok.tree_id = t.id
+         WHERE tok.user_id = $1`,
+        [userId]
+      );
+      console.log(`TreesService.getStatsForUser result: ${JSON.stringify(result)}`);
+      return {
+        count: result[0]?.count || 0,
+        co2: result[0]?.co2 || 0
+      };
+    } catch (error) {
+      console.error(`Error in getStatsForUser: ${error.message}`, error);
+      throw error;
+    }
   }
 
   async getTreesForUser(userId: string): Promise<any[]> {
-    return this.treesRepository.query(
-      `SELECT 
-         t.id, t.biome, t.state, t.status, t.tx_hash,
-         COALESCE(s.common_name, t.species) as common_name,
-         p.name as project_name
-       FROM tokens tok
-       JOIN trees t ON tok.tree_id = t.id
-       LEFT JOIN species s ON t.species_id = s.id
-       LEFT JOIN projects p ON t.project_id = p.id
-       WHERE tok.user_id = $1`,
-      [userId]
-    );
+    console.log(`TreesService.getTreesForUser called for userId: ${userId}`);
+    try {
+      const result = await this.treesRepository.query(
+        `SELECT 
+           t.id, t.biome, t.state, t.status, t.tx_hash,
+           COALESCE(s.common_name, t.species) as common_name,
+           p.name as project_name
+         FROM tokens tok
+         JOIN trees t ON tok.tree_id = t.id
+         LEFT JOIN species s ON t.species_id = s.id
+         LEFT JOIN projects p ON t.project_id = p.id
+         WHERE tok.user_id = $1`,
+        [userId]
+      );
+      console.log(`TreesService.getTreesForUser result count: ${result?.length}`);
+      return result;
+    } catch (error) {
+      console.error(`Error in getTreesForUser: ${error.message}`, error);
+      throw error;
+    }
   }
 
   async plantForUser(

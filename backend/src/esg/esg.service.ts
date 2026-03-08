@@ -164,15 +164,20 @@ export class EsgService implements OnModuleInit {
       doc.fontSize(20).fillColor('black').text('Detalhamento de Ativos (NFTs)', { underline: true });
       doc.moveDown();
       
-      if (trees.length > 0) {
-        trees.forEach((tree, index) => {
-          if (doc.y > 700) doc.addPage();
-          doc.fontSize(10).fillColor('black').text(`${index + 1}. ${tree.common_name || 'Árvore'} - ${tree.biome || 'N/A'} (${tree.state || 'N/A'})`);
-          doc.fontSize(8).fillColor('grey').text(`   TxHash: ${tree.tx_hash || 'Pendente'}`);
-          doc.moveDown(0.5);
-        });
-      } else {
-        doc.fontSize(12).fillColor('black').text('Nenhuma árvore encontrada para esta empresa.');
+      try {
+        if (trees.length > 0) {
+          trees.forEach((tree, index) => {
+            if (doc.y > 700) doc.addPage();
+            doc.fontSize(10).fillColor('black').text(`${index + 1}. ${tree.common_name || 'Árvore'} - ${tree.biome || 'N/A'} (${tree.state || 'N/A'})`);
+            doc.fontSize(8).fillColor('grey').text(`   TxHash: ${tree.tx_hash || 'Pendente'}`);
+            doc.moveDown(0.5);
+          });
+        } else {
+          doc.fontSize(12).fillColor('black').text('Nenhuma árvore encontrada para esta empresa.');
+        }
+      } catch (pdfError) {
+        console.error('Error adding trees to PDF:', pdfError);
+        doc.fontSize(12).fillColor('red').text('Erro ao listar árvores no relatório.');
       }
       
       // Footer
