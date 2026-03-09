@@ -2213,25 +2213,21 @@ export default function Dashboard() {
             </button>
             <button
               className={
-                activeSection === "projects"
+                activeSection === "store"
                   ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
                   : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
               }
               onClick={() => {
-                setActiveSection("projects")
+                setActiveSection("store")
                 setMobileMenuOpen(false)
               }}
             >
               Projetos disponíveis
             </button>
             <button
-              className={
-                activeSection === "impact"
-                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
-                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
-              }
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
               onClick={() => {
-                setActiveSection("impact")
+                setShowCarbonModal(true)
                 setMobileMenuOpen(false)
               }}
             >
