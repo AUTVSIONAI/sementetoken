@@ -488,7 +488,14 @@ export default function AdminPage() {
       setSuccess(msg)
       alert(msg)
       
-      // Opcional: recarregar a lista se necessário
+      const speciesRes = await fetch(`${API_URL}/species`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (speciesRes.ok) {
+        const list = await speciesRes.json()
+        setSpecies(Array.isArray(list) ? list : [])
+      }
+
       fetchExternalSpecies()
     } catch (err: any) {
       console.error("Erro no catch do seed:", err)
@@ -3547,6 +3554,80 @@ export default function AdminPage() {
                   </div>
                 </>
               )}
+
+              <div className="mt-8 border-t border-emerald-900 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-emerald-100">
+                    Espécies Cadastradas no Sistema ({species.length})
+                  </h3>
+                  <button
+                    onClick={() => setActiveSection("store")}
+                    className="text-xs text-emerald-300 hover:text-emerald-100 underline"
+                  >
+                    Ir para Loja/Produtos →
+                  </button>
+                </div>
+                {species.length === 0 ? (
+                  <p className="text-sm text-emerald-200/60 italic">Nenhuma espécie cadastrada ainda.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
+                    {species.map((item) => (
+                      <div
+                        key={item.id}
+                        className="border border-emerald-900 rounded-2xl bg-slate-950/80 overflow-hidden flex flex-col"
+                      >
+                        {item.imageUrl ? (
+                          <div className="h-32 bg-slate-900 overflow-hidden">
+                            <img
+                              src={getImageUrl(item.imageUrl)}
+                              alt={item.commonName || ""}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-32 bg-slate-900 flex items-center justify-center text-emerald-900">
+                            Sem imagem
+                          </div>
+                        )}
+                        <div className="p-4 flex-1 flex flex-col">
+                          <h4 className="font-bold text-emerald-100 text-sm mb-1">
+                            {item.commonName}
+                          </h4>
+                          <p className="text-xs text-emerald-400 italic mb-2">
+                            {item.scientificName}
+                          </p>
+                          <p className="text-[10px] text-emerald-200/60 line-clamp-2 mb-3">
+                            {item.description}
+                          </p>
+                          <div className="mt-auto pt-3 border-t border-emerald-900/50 flex flex-col gap-2">
+                            <div className="flex justify-between items-center text-xs text-emerald-200/50">
+                              <span>{item.biome || "Bioma N/A"}</span>
+                              <span>{item.isOfficial ? "Oficial" : "Manual"}</span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setProductForm({
+                                  name: item.commonName,
+                                  description: item.description || "",
+                                  price: String(item.salePrice || 50),
+                                  carbonCashbackKg: String(item.carbonEstimation || 100),
+                                  projectId: ""
+                                })
+                                setActiveSection("store")
+                                // Scroll to top to see form
+                                window.scrollTo({ top: 0, behavior: "smooth" })
+                              }}
+                              className="w-full py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 text-xs border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors font-semibold"
+                            >
+                              Criar Produto desta Espécie
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </section>
           )}
 
