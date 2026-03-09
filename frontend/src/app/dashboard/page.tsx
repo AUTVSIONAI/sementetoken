@@ -271,6 +271,7 @@ export default function Dashboard() {
     nfts: 0,
     greenCredits: 0
   })
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -2131,7 +2132,134 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col md:flex-row relative">
+      <button
+        className="md:hidden fixed top-20 right-4 z-50 bg-emerald-900/80 p-2 rounded-full border border-emerald-500/50 shadow-lg"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      >
+        <svg
+          className="w-6 h-6 text-emerald-100"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          {mobileMenuOpen ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          )}
+        </svg>
+      </button>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-sm md:hidden flex flex-col p-6 space-y-6 pt-24 overflow-y-auto">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
+              SementeToken
+            </p>
+            <p className="mt-1 font-semibold text-sm text-emerald-50">
+              Painel do usuário
+            </p>
+          </div>
+          <nav className="flex-1 space-y-3 text-sm">
+            <button
+              className={
+                activeSection === "overview"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("overview")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Visão geral
+            </button>
+            <button
+              className={
+                activeSection === "wallet"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("wallet")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Minha carteira
+            </button>
+            <button
+              className={
+                activeSection === "trees"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("trees")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Minhas árvores
+            </button>
+            <button
+              className={
+                activeSection === "projects"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("projects")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Projetos disponíveis
+            </button>
+            <button
+              className={
+                activeSection === "impact"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("impact")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Calculadora de Impacto
+            </button>
+            <button
+              className={
+                activeSection === "chat"
+                  ? "w-full text-left px-3 py-2 rounded-lg bg-emerald-500 text-emerald-950"
+                  : "w-full text-left px-3 py-2 rounded-lg hover:bg-emerald-900/50 border border-emerald-900/30"
+              }
+              onClick={() => {
+                setActiveSection("chat")
+                setMobileMenuOpen(false)
+              }}
+            >
+              Chat com a Árvore
+            </button>
+            <button
+              className="w-full text-left px-3 py-2 rounded-lg text-red-300 hover:bg-red-900/20 border border-red-900/30 mt-4"
+              onClick={handleLogout}
+            >
+              Sair
+            </button>
+          </nav>
+        </div>
+      )}
+
       <aside className="hidden md:flex flex-col w-60 bg-slate-950 border-r border-emerald-900 px-6 py-8 space-y-6">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">

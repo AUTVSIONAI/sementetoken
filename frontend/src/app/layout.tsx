@@ -90,19 +90,19 @@ export default function RootLayout({
                 </a>
                 <a
                   href="/whitepaper"
-                  className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
+                  className="hidden md:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
                 >
                   Whitepaper
                 </a>
                 <a
                   href="/roadmap"
-                  className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
+                  className="hidden md:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
                 >
                   Roadmap
                 </a>
                 <a
                   href="/dashboard"
-                  className="hidden sm:inline-flex px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
+                  className="px-3 py-1 rounded-full hover:bg-emerald-800/80 transition-colors"
                 >
                   Dashboard
                 </a>

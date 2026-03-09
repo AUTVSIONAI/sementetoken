@@ -25,6 +25,7 @@ type MarketplaceProduct = {
   name: string
   description?: string | null
   price: number
+  imageUrl?: string | null
   carbonCashbackKg: number
   projectName?: string | null
   projectState?: string | null
@@ -648,15 +649,15 @@ export default function Marketplace() {
                         key={product.id}
                         className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/80 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 transition flex flex-col"
                       >
-                        {relatedSpecies?.imageUrl ||
+                        {product.imageUrl || relatedSpecies?.imageUrl ||
                         speciesImageCache[product.id] ? (
                           <div className="h-32 bg-slate-900 overflow-hidden">
                             <img
                               src={
-                                getImageUrl(relatedSpecies?.imageUrl) ||
+                                getImageUrl(product.imageUrl || relatedSpecies?.imageUrl) ||
                                 speciesImageCache[product.id]
                               }
-                              alt={relatedSpecies?.commonName || product.name}
+                              alt={product.name || relatedSpecies?.commonName}
                               className="w-full h-full object-cover"
                             />
                           </div>
