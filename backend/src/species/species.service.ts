@@ -203,22 +203,33 @@ export class SpeciesService {
   }
 
   async enrichMissingImages() {
-    const missing = await this.speciesRepository.find({
-      where: { imageUrl: IsNull() }
-    })
+    const missing = await this.speciesRepository.find()
     let updated = 0
+    this.logger.log(`Checking ${missing.length} species for missing images...`)
+    
     for (const s of missing) {
+      if (s.imageUrl && s.imageUrl.trim() !== "") {
+        continue
+      }
+      
       try {
-        const img =
-          (await this.getImageFromWikipedia(s.scientificName || null)) ||
-          (await this.getImageFromWikipedia(s.commonName || null)) ||
-          null
-        if (img) {
-          s.imageUrl = img
+        const searchName = s.scientificName || s.commonName
+        if (!searchName) continue
+
+        const data = await this.wikipediaService.fetchSpeciesData(searchName)
+        if (data && data.imageUrl) {
+          s.imageUrl = data.imageUrl
+          // Se não tiver descrição, aproveitar para atualizar
+          if (!s.description && data.description) {
+            s.description = data.description
+          }
           await this.speciesRepository.save(s)
           updated++
+          this.logger.log(`Enriched species: ${s.commonName} with image from Wikipedia`)
         }
-      } catch {}
+      } catch (err) {
+        this.logger.error(`Failed to enrich species ${s.commonName}: ${err.message}`)
+      }
     }
     return { updated }
   }
