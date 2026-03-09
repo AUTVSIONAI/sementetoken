@@ -3266,26 +3266,54 @@ export default function AdminPage() {
                   {error}
                 </div>
               )}
-              {externalSpecies.length === 0 ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-emerald-200/80">
-                    O catálogo da API pública ainda não foi carregado nesta
-                    sessão.
-                  </p>
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      console.log("Clicou no botão Seed Oficial")
+                      handleSeedOfficialSpecies()
+                    }}
+                    disabled={seedingOfficial}
+                    className="inline-flex items-center px-4 py-2 rounded-full border border-yellow-500/60 text-sm font-bold text-yellow-100 bg-yellow-500/10 hover:bg-yellow-500/20 disabled:opacity-50 shadow-lg shadow-yellow-900/20"
+                  >
+                    {seedingOfficial
+                      ? "Processando..."
+                      : "Carregar 60 Espécies Nativas (Wikipedia)"}
+                  </button>
                   <button
                     type="button"
                     onClick={fetchExternalSpecies}
                     disabled={externalSpeciesLoading}
-                    className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-400 text-emerald-950 text-sm font-semibold hover:bg-emerald-300 disabled:opacity-50"
+                    className="inline-flex items-center px-4 py-2 rounded-full border border-emerald-500/60 text-sm text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-50"
                   >
                     {externalSpeciesLoading
-                      ? "Carregando espécies..."
-                      : "Carregar espécies da API pública"}
+                      ? "Atualizando..."
+                      : "API Externa (Requer Chave)"}
                   </button>
-                  <p className="text-xs text-emerald-200/70">
-                    Isso pode levar alguns segundos, pois a lista é grande.
-                    Depois de carregada, você pode transformar espécies em
-                    produtos sem precisar buscar de novo.
+                  <button
+                    type="button"
+                    onClick={handleEnrichSpeciesImages}
+                    disabled={enrichingSpeciesImages}
+                    className="inline-flex items-center px-4 py-2 rounded-full border border-sky-500/60 text-sm text-emerald-100 hover:bg-sky-500/10 disabled:opacity-50"
+                  >
+                    {enrichingSpeciesImages
+                      ? "Enriquecendo..."
+                      : "Enriquecer Imagens"}
+                  </button>
+                </div>
+                <p className="text-xs text-emerald-200/60">
+                  Use o botão amarelo para carregar espécies oficiais. O botão de API externa requer configuração de chave.
+                </p>
+              </div>
+
+              {externalSpecies.length === 0 ? (
+                <div className="p-8 text-center border border-emerald-900/50 rounded-xl bg-slate-950/30">
+                  <p className="text-sm text-emerald-200/80">
+                    Nenhuma espécie carregada da API pública externa.
+                  </p>
+                  <p className="text-xs text-emerald-200/50 mt-1">
+                    As espécies oficiais carregadas pelo botão amarelo aparecerão na lista de produtos/espécies do sistema, não aqui nesta lista temporária.
                   </p>
                 </div>
               ) : (
@@ -3319,39 +3347,6 @@ export default function AdminPage() {
                         {externalSpecies.length} espécies carregadas da API
                         pública.
                       </p>
-                      <button
-                        type="button"
-                        onClick={fetchExternalSpecies}
-                        disabled={externalSpeciesLoading}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-emerald-500/60 text-xs text-emerald-100 hover:bg-emerald-500/10 disabled:opacity-50"
-                      >
-                        {externalSpeciesLoading
-                          ? "Atualizando..."
-                          : "API Externa (Requer Chave)"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleEnrichSpeciesImages}
-                        disabled={enrichingSpeciesImages}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-sky-500/60 text-xs text-emerald-100 hover:bg-sky-500/10 disabled:opacity-50"
-                      >
-                        {enrichingSpeciesImages
-                          ? "Enriquecendo..."
-                          : "Enriquecer Imagens"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          console.log("Clicou no botão Seed Oficial")
-                          handleSeedOfficialSpecies()
-                        }}
-                        disabled={seedingOfficial}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-yellow-500/60 text-xs text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-50 font-bold shadow-lg shadow-yellow-900/20"
-                      >
-                        {seedingOfficial
-                          ? "Processando..."
-                          : "Carregar 60 Espécies (Wikipedia)"}
-                      </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
