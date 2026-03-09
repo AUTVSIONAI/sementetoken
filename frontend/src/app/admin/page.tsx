@@ -59,6 +59,10 @@ type Species = {
   scientificName?: string
   biome?: string
   imageUrl?: string
+  description?: string
+  salePrice?: number
+  carbonEstimation?: number
+  isOfficial?: boolean
 }
 
 type ExternalSpecies = {
