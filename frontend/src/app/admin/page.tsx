@@ -3327,7 +3327,7 @@ export default function AdminPage() {
                       >
                         {externalSpeciesLoading
                           ? "Atualizando..."
-                          : "Recarregar catálogo"}
+                          : "API Externa (Requer Chave)"}
                       </button>
                       <button
                         type="button"
@@ -3336,21 +3336,21 @@ export default function AdminPage() {
                         className="inline-flex items-center px-3 py-1.5 rounded-full border border-sky-500/60 text-xs text-emerald-100 hover:bg-sky-500/10 disabled:opacity-50"
                       >
                         {enrichingSpeciesImages
-                          ? "Enriquecendo imagens..."
-                          : "Enriquecer imagens (backend)"}
+                          ? "Enriquecendo..."
+                          : "Enriquecer Imagens"}
                       </button>
                       <button
                         type="button"
                         onClick={() => {
-                          console.log("Clicou no botão Seed (Render Check)")
+                          console.log("Clicou no botão Seed Oficial")
                           handleSeedOfficialSpecies()
                         }}
                         disabled={seedingOfficial}
-                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-yellow-500/60 text-xs text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-50"
+                        className="inline-flex items-center px-3 py-1.5 rounded-full border border-yellow-500/60 text-xs text-yellow-100 hover:bg-yellow-500/10 disabled:opacity-50 font-bold shadow-lg shadow-yellow-900/20"
                       >
                         {seedingOfficial
-                          ? "Semeando..."
-                          : "Carregar Catálogo Oficial"}
+                          ? "Processando..."
+                          : "Carregar 60 Espécies (Wikipedia)"}
                       </button>
                     </div>
                   </div>
