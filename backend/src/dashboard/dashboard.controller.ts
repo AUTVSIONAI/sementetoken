@@ -18,7 +18,7 @@ export class DashboardController {
   @UseGuards(JwtAuthGuard)
   @Get("trees")
   userTrees(@Req() req: any) {
-    return this.dashboardService.userTrees(req.user.sub)
+    return this.dashboardService.userTrees(req.user?.userId || req.user?.id)
   }
 
   @UseGuards(JwtAuthGuard)

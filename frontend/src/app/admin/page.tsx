@@ -250,6 +250,9 @@ export default function AdminPage() {
   })
   const [productImageFile, setProductImageFile] = useState<File | null>(null)
   const [treeImageFile, setTreeImageFile] = useState<File | null>(null)
+  const [bulkProductsProjectId, setBulkProductsProjectId] = useState("")
+  const [bulkProductsDefaultPrice, setBulkProductsDefaultPrice] = useState("")
+  const [bulkProductsLoading, setBulkProductsLoading] = useState(false)
 
   async function handleUploadFile(file: File, endpoint: string): Promise<string | null> {
     const formData = new FormData()
@@ -1336,6 +1339,73 @@ export default function AdminPage() {
       })
     } catch (err: any) {
       setError(err.message || "Erro inesperado")
+    }
+  }
+
+  async function handleBulkCreateProductsFromSpecies() {
+    setError("")
+    setSuccess("")
+    const token = localStorage.getItem("accessToken")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    try {
+      setBulkProductsLoading(true)
+      const payload = {
+        projectId: bulkProductsProjectId || null,
+        defaultPrice: bulkProductsDefaultPrice
+          ? Number(bulkProductsDefaultPrice)
+          : null
+      }
+      const res = await fetch(`${API_URL}/products/bulk-from-species`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.message || "Erro ao criar produtos em lote")
+      }
+
+      const result = await res.json().catch(() => null)
+      setSuccess(
+        result
+          ? `Produtos em lote: ${result.created} criados, ${result.skipped} ignorados.`
+          : "Produtos em lote criados."
+      )
+
+      const productsRes = await fetch(`${API_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if (productsRes.ok) {
+        const list = await productsRes.json()
+        setProducts(
+          Array.isArray(list)
+            ? list.map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                description: p.description ?? null,
+                price: p.price ?? 0,
+                imageUrl: p.imageUrl ?? null,
+                carbonCashbackKg: p.carbonCashbackKg ?? 0,
+                projectId: p.project?.id ?? null,
+                projectName: p.project?.name ?? null
+              }))
+            : []
+        )
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro inesperado")
+    } finally {
+      setBulkProductsLoading(false)
     }
   }
 
@@ -4341,6 +4411,54 @@ export default function AdminPage() {
               <p className="text-sm text-emerald-200/80 mb-4">
                 Cadastre produtos conectados a projetos e cashback de carbono.
               </p>
+              <div className="mb-5 bg-slate-950/60 border border-emerald-900/60 rounded-2xl p-4">
+                <h3 className="text-sm font-semibold text-emerald-100">
+                  Publicar produtos em lote
+                </h3>
+                <p className="mt-1 text-xs text-emerald-200/80">
+                  Cria automaticamente um produto para cada espécie cadastrada que ainda não tenha produto no marketplace.
+                </p>
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-emerald-200/80 mb-1">
+                      Projeto (opcional)
+                    </label>
+                    <select
+                      className="w-full border border-emerald-800 rounded px-3 py-2 text-sm bg-slate-950 text-emerald-50"
+                      value={bulkProductsProjectId}
+                      onChange={(e) => setBulkProductsProjectId(e.target.value)}
+                    >
+                      <option value="">Nenhum projeto</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-emerald-200/80 mb-1">
+                      Preço padrão (opcional)
+                    </label>
+                    <input
+                      className="w-full border border-emerald-800 rounded px-3 py-2 text-sm bg-slate-950 text-emerald-50"
+                      placeholder="Ex: 100"
+                      value={bulkProductsDefaultPrice}
+                      onChange={(e) => setBulkProductsDefaultPrice(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      className="w-full bg-emerald-400 text-emerald-950 py-2 px-4 rounded-full text-sm font-semibold hover:bg-emerald-300 disabled:opacity-60"
+                      onClick={handleBulkCreateProductsFromSpecies}
+                      disabled={bulkProductsLoading}
+                    >
+                      {bulkProductsLoading ? "Publicando..." : "Subir todas as espécies"}
+                    </button>
+                  </div>
+                </div>
+              </div>
               {error && (
                 <div className="mb-4 text-xs text-red-200 bg-red-900/40 border border-red-500/40 px-3 py-2 rounded-lg">
                   {error}

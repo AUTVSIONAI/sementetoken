@@ -3375,6 +3375,14 @@ export default function Dashboard() {
                           <p className="mt-1 text-[11px] text-emerald-300 font-medium">
                             {co2Tons.toFixed(2)} t CO₂
                           </p>
+                          <a
+                            href={`/tree/${tree.id}`}
+                            className="mt-2 inline-block text-[11px] text-sky-300 hover:text-sky-200"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Abrir página pública de verificação
+                          </a>
                         </div>
                       </div>
                     )

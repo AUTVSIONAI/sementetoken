@@ -18,7 +18,7 @@ export class OrdersController {
       }[]
     }
   ) {
-    const userId = req.user.sub as string
+    const userId = (req.user?.userId || req.user?.id) as string
     return this.ordersService.createForUser(userId, body.items || [])
   }
 }

@@ -43,7 +43,9 @@ import { HealthModule } from "./health/health.module"
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       entities: [__dirname + "/**/*.entity{.ts,.js}"],
-      synchronize: true,
+      synchronize:
+        process.env.TYPEORM_SYNC === "true" ||
+        process.env.NODE_ENV !== "production",
       dropSchema: false,
     }),
     ServeStaticModule.forRoot({

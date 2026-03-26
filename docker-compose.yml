@@ -127,3 +127,4 @@ networks:
 
 volumes:
   postgres_data:
+    name: sementetoken_postgres_data

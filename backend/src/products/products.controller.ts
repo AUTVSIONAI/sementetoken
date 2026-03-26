@@ -74,6 +74,19 @@ export class ProductsController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @Post("bulk-from-species")
+  bulkFromSpecies(
+    @Body()
+    body: {
+      projectId?: string | null
+      defaultPrice?: number | null
+    }
+  ) {
+    return this.productsService.bulkCreateFromSpecies(body)
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(":id")
   remove(@Param("id") id: string): Promise<void> {
     return this.productsService.delete(id)
