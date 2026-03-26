@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core"
 import { NestExpressApplication } from "@nestjs/platform-express"
+import { RequestMethod } from "@nestjs/common"
 import { join } from "path"
 import { AppModule } from "./app.module"
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger"
@@ -12,7 +13,14 @@ async function bootstrap() {
 
   app.enableCors()
 
-  app.setGlobalPrefix("api")
+  app.setGlobalPrefix("api", {
+    exclude: [
+      { path: "metadata", method: RequestMethod.ALL },
+      { path: "metadata/(.*)", method: RequestMethod.ALL },
+      { path: "tree", method: RequestMethod.ALL },
+      { path: "tree/(.*)", method: RequestMethod.ALL }
+    ]
+  })
 
   const config = new DocumentBuilder()
     .setTitle("SementeToken API")
